@@ -14,12 +14,15 @@ import {
 } from 'lucide-react';
 import OrbitImages from '../components/OrbitImages';
 import DriftWall from '../components/DriftWall';
+import FloatingPlanetBg from '../components/FloatingPlanetBg';
 import { planetsList, planetImages } from '../assets/planets';
 import { WHATSAPP_TESTIMONIALS } from '../data/whatsappChats';
 
 export default function LandingPage({ onOpenAuth, onLaunchDashboard }) {
   return (
-    <div className="relative min-h-screen text-white selection:bg-purple-500/30 selection:text-white">
+    <div className="relative min-h-screen text-white selection:bg-purple-500/30 selection:text-white overflow-hidden">
+      {/* Dynamic Floating Celestial Planet Background (Transparent Cutout, Soft Organic Drift, Breathing Corona) */}
+      <FloatingPlanetBg />
       {/* 1. Floating Glassmorphism Pill Navbar (Ultra-Responsive & Sleek) */}
       <div className="fixed top-3 sm:top-5 inset-x-0 z-50 px-3 sm:px-4 flex justify-center pointer-events-none">
         <nav className="pointer-events-auto w-full max-w-4xl rounded-full bg-[#05070D]/80 backdrop-blur-2xl border border-white/10 px-3.5 sm:px-7 py-2 sm:py-3 flex items-center justify-between shadow-2xl shadow-black/90">
