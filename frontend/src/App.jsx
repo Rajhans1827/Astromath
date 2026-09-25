@@ -47,16 +47,16 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-[#05070D] text-slate-100 overflow-x-hidden selection:bg-purple-500/30 selection:text-white">
-      {/* Procedural DarkVeil Fluid Silk Shader (Zero Dots) */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-95">
+      {/* Procedural DarkVeil Fluid Silk Shader (Dimmed & Calibrated for Pure Luxury) */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-35">
         <DarkVeil
-          speed={0.32}
-          warpAmount={0.3}
-          hueShift={-15}
-          noiseIntensity={0.015}
+          speed={0.25}
+          warpAmount={0.28}
+          hueShift={-18}
+          noiseIntensity={0.012}
         />
-        {/* Soft Ambient Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#05070D]/40 via-transparent to-[#05070D]/90" />
+        {/* Soft Ambient Deep Obsidian Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05070D]/80 via-[#05070D]/50 to-[#05070D]" />
       </div>
 
       {/* Main Views */}
