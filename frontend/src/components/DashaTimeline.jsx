@@ -18,7 +18,7 @@ export default function DashaTimeline({ dashaData = [] }) {
 
   if (!dashaData || dashaData.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400 rounded-3xl bg-[#080B14]/60 border border-white/5">
+      <div className="p-8 text-center text-slate-400 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10">
         No planetary cycle data available. Please generate your birth matrix.
       </div>
     );
@@ -34,22 +34,22 @@ export default function DashaTimeline({ dashaData = [] }) {
     <div className="space-y-6">
       {/* Active Planetary Era */}
       {currentDasha && (
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-transparent p-6 sm:p-8 border border-amber-500/20 backdrop-blur-xl shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] backdrop-blur-2xl p-6 sm:p-8 border border-white/10 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-amber-300">
-                <Clock className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                <Clock className="w-3.5 h-3.5 text-white" />
                 Active Planetary Era (Vimshottari Major Cycle)
               </div>
-              <h3 className="text-2xl sm:text-3xl font-cinzel font-bold text-white mt-1.5">
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mt-1.5 tracking-tight">
                 {currentDasha.lord} Era
                 {currentDasha.currentAntar && (
-                  <span className="text-amber-200/90 text-xl font-sans ml-3 font-normal">
+                  <span className="text-slate-300 text-xl font-normal ml-3">
                     — {currentDasha.currentAntar} Sub-Period
                   </span>
                 )}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-mono">
+              <p className="text-xs sm:text-sm text-slate-400 mt-2 font-mono">
                 Duration: {currentDasha.startDate} to {currentDasha.endDate}
               </p>
             </div>
@@ -102,7 +102,7 @@ export default function DashaTimeline({ dashaData = [] }) {
       {/* Planetary Eras List */}
       <div className="space-y-2.5">
         <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-amber-400" />
+          <Calendar className="w-4 h-4 text-white" />
           The Nine Planetary Eras (Click to inspect sub-cycles)
         </h4>
 
@@ -113,8 +113,8 @@ export default function DashaTimeline({ dashaData = [] }) {
               key={d.lord}
               className={`rounded-2xl border transition-all ${
                 d.isCurrent
-                  ? 'border-amber-500/30 bg-amber-500/5'
-                  : 'border-white/5 bg-[#080B14]/60 hover:border-white/15'
+                  ? 'border-white/30 bg-white/[0.06] shadow-lg'
+                  : 'border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]'
               }`}
             >
               <button
@@ -130,7 +130,7 @@ export default function DashaTimeline({ dashaData = [] }) {
                     <span className="font-semibold text-white mr-2 text-sm">{d.lord} Era</span>
                     <span className="text-xs text-slate-400">({d.years} Years)</span>
                     {d.isCurrent && (
-                      <span className="ml-2.5 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                      <span className="ml-2.5 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
                         Current
                       </span>
                     )}
@@ -158,14 +158,14 @@ export default function DashaTimeline({ dashaData = [] }) {
                         key={antar.lord}
                         className={`p-3 rounded-xl text-xs border ${
                           antar.isCurrent
-                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
-                            : 'bg-slate-900/60 border-white/5 text-slate-300'
+                            ? 'bg-white/[0.08] border-white/25 text-white font-medium shadow-sm'
+                            : 'bg-black/30 border-white/5 text-slate-300'
                         }`}
                       >
                         <div className="flex items-center justify-between font-medium">
                           <span>{d.lord} • {antar.lord}</span>
                           {antar.isCurrent && (
-                            <span className="text-[10px] text-amber-300">Active</span>
+                            <span className="text-[10px] text-emerald-300 font-bold">Active</span>
                           )}
                         </div>
                         <div className="text-[11px] text-slate-400 mt-1 font-mono">

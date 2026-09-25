@@ -70,24 +70,22 @@ export default function AIChatbot({ chartData, nativeName = 'Seeker' }) {
   ];
 
   return (
-    <div className="flex flex-col h-[660px] rounded-3xl bg-[#080B14] border border-amber-500/20 overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-[650px] rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 overflow-hidden shadow-2xl">
       {/* Header */}
-      <div className="p-5 px-6 bg-slate-950/80 border-b border-white/5 flex items-center justify-between">
+      <div className="p-5 px-6 bg-white/[0.02] border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 via-purple-500 to-amber-200 p-[1px] shadow-lg shadow-amber-500/10">
-            <div className="w-full h-full bg-slate-950 rounded-2xl flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-            </div>
+          <div className="w-10 h-10 rounded-2xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-white shadow-inner">
+            <Sparkles className="w-5 h-5 text-amber-300" />
           </div>
           <div>
-            <h3 className="font-cinzel font-bold text-white text-base tracking-wide flex items-center gap-2">
+            <h3 className="font-bold text-white text-base tracking-tight flex items-center gap-2">
               AstroMath Oracle
-              <span className="text-[10px] tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-medium">
+              <span className="text-[10px] tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-white/[0.06] text-slate-300 border border-white/10 font-medium">
                 Vedic Synthesis
               </span>
             </h3>
-            <p className="text-xs text-slate-400">
-              Personalized consultation grounded in your verified celestial coordinates
+            <p className="text-xs text-slate-400 font-light">
+              Personalized consultation grounded in verified celestial coordinates
             </p>
           </div>
         </div>
@@ -105,8 +103,8 @@ export default function AIChatbot({ chartData, nativeName = 'Seeker' }) {
             <div
               className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-xs ${
                 msg.role === 'user'
-                  ? 'bg-amber-400 text-slate-950 font-bold'
-                  : 'bg-purple-500/15 border border-purple-500/30 text-purple-300'
+                  ? 'bg-white text-slate-950 font-bold shadow-md'
+                  : 'bg-white/[0.08] border border-white/15 text-slate-200'
               }`}
             >
               {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -115,8 +113,8 @@ export default function AIChatbot({ chartData, nativeName = 'Seeker' }) {
             <div
               className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-semibold rounded-tr-none'
-                  : 'bg-slate-900/90 border border-white/5 text-slate-200 rounded-tl-none font-normal'
+                  ? 'bg-white text-slate-950 font-semibold rounded-tr-none shadow-lg'
+                  : 'bg-white/[0.04] backdrop-blur-xl border border-white/10 text-slate-200 rounded-tl-none font-light'
               }`}
               style={{ whiteSpace: 'pre-line' }}
             >
@@ -127,10 +125,10 @@ export default function AIChatbot({ chartData, nativeName = 'Seeker' }) {
 
         {loading && (
           <div className="flex gap-3 max-w-[80%]">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/15 text-slate-200 flex items-center justify-center">
               <Bot className="w-4 h-4 animate-pulse" />
             </div>
-            <div className="p-4 rounded-2xl rounded-tl-none bg-slate-900/90 border border-white/5 text-slate-400 text-xs flex items-center gap-2">
+            <div className="p-4 rounded-2xl rounded-tl-none bg-white/[0.04] border border-white/10 text-slate-300 text-xs flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
               Consulting your planetary alignment and harmonic matrices...
             </div>
@@ -141,12 +139,12 @@ export default function AIChatbot({ chartData, nativeName = 'Seeker' }) {
       </div>
 
       {/* Suggested Prompts */}
-      <div className="px-6 py-2.5 bg-slate-950/60 border-t border-white/5 flex gap-2 overflow-x-auto text-xs no-scrollbar">
+      <div className="px-6 py-3 bg-white/[0.01] border-t border-white/5 flex gap-2 overflow-x-auto text-xs no-scrollbar">
         {sampleQuestions.map((q, i) => (
           <button
             key={i}
             onClick={() => setInput(q)}
-            className="px-3 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/5 hover:border-amber-400/40 shrink-0 transition-colors"
+            className="px-3.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/10 transition-all shrink-0 font-medium"
           >
             {q}
           </button>
@@ -154,20 +152,20 @@ export default function AIChatbot({ chartData, nativeName = 'Seeker' }) {
       </div>
 
       {/* Input Field */}
-      <form onSubmit={handleSend} className="p-4 bg-slate-950 border-t border-white/5 flex gap-3">
+      <form onSubmit={handleSend} className="p-4 bg-white/[0.02] border-t border-white/10 flex gap-3">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask regarding your destiny, career timing, marriage, or daily transit..."
-          className="flex-1 px-4 py-3 rounded-2xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+          className="flex-1 px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-white/30 transition-colors"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-bold text-sm transition-all shadow-xl shadow-amber-500/20 disabled:opacity-50 flex items-center gap-2"
+          className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-xl shadow-white/15 disabled:opacity-40 flex items-center gap-2 shrink-0"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-3.5 h-3.5" />
           <span>Consult</span>
         </button>
       </form>

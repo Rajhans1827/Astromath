@@ -37,19 +37,19 @@ export default function KundaliChart({
     <div className="flex flex-col items-center select-none w-full">
       <div className="flex items-center justify-between w-full max-w-[460px] mb-3 px-1">
         <div>
-          <h4 className="font-cinzel text-amber-200/90 font-semibold tracking-widest text-sm uppercase">
+          <h4 className="text-white font-bold tracking-tight text-sm">
             {title}
           </h4>
           <span className="text-[11px] text-slate-400 font-mono tracking-tight">
             Ascendant • {ZODIAC_SIGNS[lagnaSign - 1]}
           </span>
         </div>
-        <span className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 font-medium">
+        <span className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 font-medium">
           Sidereal Wheel
         </span>
       </div>
 
-      <div className="relative p-3 rounded-3xl bg-[#080B14]/80 backdrop-blur-2xl border border-amber-500/20 shadow-2xl shadow-black/80">
+      <div className="relative p-3.5 sm:p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl">
         <svg
           viewBox="0 0 400 400"
           width={size}
@@ -58,12 +58,12 @@ export default function KundaliChart({
         >
           <defs>
             <linearGradient id="chartGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F5E6C8" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#D4AF37" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#F5E6C8" stopOpacity="0.9" />
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#E2E8F0" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.8" />
             </linearGradient>
             <radialGradient id="centerAtmosphere" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.06" />
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.04" />
               <stop offset="80%" stopColor="#05070D" stopOpacity="0" />
             </radialGradient>
           </defs>
@@ -79,13 +79,13 @@ export default function KundaliChart({
             height="388"
             fill="none"
             stroke="url(#chartGold)"
-            strokeWidth="2"
-            rx="6"
+            strokeWidth="1.8"
+            rx="8"
           />
 
           {/* Diagonals */}
-          <line x1="6" y1="6" x2="394" y2="394" stroke="url(#chartGold)" strokeWidth="1.2" opacity="0.8" />
-          <line x1="6" y1="394" x2="394" y2="6" stroke="url(#chartGold)" strokeWidth="1.2" opacity="0.8" />
+          <line x1="6" y1="6" x2="394" y2="394" stroke="url(#chartGold)" strokeWidth="1.2" opacity="0.7" />
+          <line x1="6" y1="394" x2="394" y2="6" stroke="url(#chartGold)" strokeWidth="1.2" opacity="0.7" />
 
           {/* Inner Diamond */}
           <polygon
@@ -109,9 +109,9 @@ export default function KundaliChart({
                   y={coord.sign.y}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fill="#D4AF37"
+                  fill="#94A3B8"
                   fontSize="12"
-                  fontFamily="'Cinzel', serif"
+                  fontFamily="'Plus Jakarta Sans', sans-serif"
                   fontWeight="600"
                   opacity="0.85"
                 >
@@ -131,7 +131,7 @@ export default function KundaliChart({
                           y={coord.planets.y + yOffset}
                           textAnchor="middle"
                           dominantBaseline="central"
-                          fill={p.isRetro ? '#FDA4AF' : '#F1F5F9'}
+                          fill={p.isRetro ? '#FDA4AF' : '#FFFFFF'}
                           fontSize={total > 2 ? '9.5' : '10.5'}
                           fontFamily="'Plus Jakarta Sans', sans-serif"
                           fontWeight="600"
@@ -149,17 +149,6 @@ export default function KundaliChart({
             );
           })}
         </svg>
-      </div>
-
-      <div className="flex items-center gap-6 mt-3 text-[11px] text-slate-400">
-        <span className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
-          Numeral: Zodiac Sign (1=Aries ... 12=Pisces)
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 inline-block"></span>
-          ℞: Retrograde Motion
-        </span>
       </div>
     </div>
   );
