@@ -493,12 +493,40 @@ def calculate_birth_chart(dob, tob, lat, lon, tz=5.5):
         }
     }
 
-def calculate_daily_gochar(natal_data):
+def calculate_daily_gochar(natal_data, target_date=None):
     """
     Computes 100% authentic real-time planetary transits (गोचर) for all 9 Grahas
     via Python ephem, including Sade Sati, Guru Gochar, Chandra Bala, Tara Bala, and Panchang.
+    Supports calculating for today, tomorrow, or any specific target date.
     """
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    if target_date:
+        try:
+            if isinstance(target_date, (int, float)):
+                now_utc = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=float(target_date))
+            elif isinstance(target_date, str):
+                target_str = target_date.strip().lower()
+                if target_str in ['tomorrow', 'udya', 'उद्या']:
+                    now_utc = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+                elif target_str in ['day_after', 'parwa', 'परवा']:
+                    now_utc = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=2)
+                elif target_str in ['today', 'aaj', 'आज']:
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
+                else:
+                    clean_str = target_str.replace('/', '-')
+                    if ' ' in clean_str:
+                        dt = datetime.datetime.strptime(clean_str[:19], '%Y-%m-%d %H:%M:%S')
+                    elif 't' in clean_str:
+                        dt = datetime.datetime.fromisoformat(clean_str[:19])
+                    else:
+                        dt = datetime.datetime.strptime(clean_str[:10], '%Y-%m-%d')
+                    now_utc = dt.replace(tzinfo=datetime.timezone.utc)
+            else:
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
+        except Exception:
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+    else:
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+
     date_str = now_utc.strftime('%Y/%m/%d %H:%M:%S')
     
     obs = ephem.Observer()
@@ -833,7 +861,10 @@ def calculate_daily_gochar(natal_data):
             )
         },
         'transitPlanets': transit_planets,
-        'summary': f"आज {today_weekday}, {tithi_name} रोजी चंद्र {today_moon_data['sign']} राशीत असून चंद्रबल {chandra_score}/10 आहे. ९ पैकी {fav_count} ग्रह जन्मकुंडलीला अनुकूल भ्रमण करत आहेत. एकंदरीत दिवस {overall_score}/10 गुणांसह सकारात्मक राहील."
+        'targetDate': now_utc.strftime('%Y-%m-%d'),
+        'targetDateFormatted': now_utc.strftime('%d %B %Y'),
+        'dayLabel': "उद्या" if now_utc.date() == (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)).date() else ("आज" if now_utc.date() == datetime.datetime.now(datetime.timezone.utc).date() else now_utc.strftime('%d/%m/%Y')),
+        'summary': f"{'उद्या' if now_utc.date() == (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)).date() else ('आज' if now_utc.date() == datetime.datetime.now(datetime.timezone.utc).date() else now_utc.strftime('%d/%m/%Y'))} {today_weekday}, {tithi_name} रोजी चंद्र {today_moon_data['sign']} राशीत असून चंद्रबल {chandra_score}/10 आहे. ९ पैकी {fav_count} ग्रह जन्मकुंडलीला अनुकूल भ्रमण करत आहेत. एकंदरीत दिवस {overall_score}/10 गुणांसह सकारात्मक राहील."
     }
 
 # ==============================================================================
@@ -1433,7 +1464,8 @@ def main():
             print(json.dumps(result, ensure_ascii=False))
         elif action == 'daily':
             natal_data = payload.get('natalData', {})
-            result = calculate_daily_gochar(natal_data)
+            target_date = payload.get('targetDate', None)
+            result = calculate_daily_gochar(natal_data, target_date)
             print(json.dumps(result, ensure_ascii=False))
         elif action == 'numerology':
             name = payload.get('name', '')

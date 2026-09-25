@@ -33,13 +33,43 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
     if (initialBirthData && initialBirthData.dob && initialBirthData.tob) {
       return initialBirthData;
     }
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('astromath_active_profile');
+        if (cached) {
+          const p = JSON.parse(cached);
+          if (p?.dob && p?.tob) return p;
+        }
+      } catch (e) {}
+    }
     return null;
   });
 
   const [chartData, setChartData] = useState(null);
   const [dailyData, setDailyData] = useState(null);
   const [aiReport, setAiReport] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('astromath_token');
+      if (token && (!initialBirthData || !initialBirthData.dob)) return true;
+    }
+    return false;
+  });
+  const [profileChecked, setProfileChecked] = useState(() => {
+    if (initialBirthData && initialBirthData.dob) return true;
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('astromath_active_profile');
+      if (cached) {
+        try {
+          const p = JSON.parse(cached);
+          if (p?.dob && p?.tob) return true;
+        } catch (e) {}
+      }
+      const token = localStorage.getItem('astromath_token');
+      if (token) return false;
+    }
+    return true;
+  });
   const [aiLoading, setAiLoading] = useState(false);
   const [selectedChartType, setSelectedChartType] = useState('D1');
 
@@ -56,6 +86,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           if (data?.profile?.dob && data?.profile?.tob) {
             setBirthData(data.profile);
             setChartData(data.chart);
+            localStorage.setItem('astromath_active_profile', JSON.stringify(data.profile));
             fetchDaily(data.profile);
           } else if (initialBirthData?.dob && initialBirthData?.tob) {
             setBirthData(initialBirthData);
@@ -69,13 +100,33 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
         .catch((err) => {
           console.error('Failed to load profile for user:', err);
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+          setProfileChecked(true);
+        });
     } else if (initialBirthData?.dob && initialBirthData?.tob) {
       setBirthData(initialBirthData);
       fetchChart(initialBirthData);
+      setLoading(false);
+      setProfileChecked(true);
     } else {
+      try {
+        const cached = localStorage.getItem('astromath_active_profile');
+        if (cached) {
+          const p = JSON.parse(cached);
+          if (p?.dob && p?.tob) {
+            setBirthData(p);
+            fetchChart(p);
+            setLoading(false);
+            setProfileChecked(true);
+            return;
+          }
+        }
+      } catch (e) {}
       setBirthData(null);
       setChartData(null);
+      setLoading(false);
+      setProfileChecked(true);
       setBirthModalOpen(true);
     }
   }, [user?.id]);
@@ -173,6 +224,20 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
     setBirthModalOpen(false);
     fetchDaily(newProfile);
   };
+
+  // While profile is being checked from database during initial hydration, show cosmic loading spinner (never glitch the modal)
+  if (!profileChecked && (!birthData || !birthData.dob)) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-20">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="w-14 h-14 rounded-full border-4 border-amber-400/20 border-t-amber-400 animate-spin shadow-lg shadow-amber-400/20" />
+          <p className="text-slate-300 font-medium tracking-wide">
+            {lang === 'mr' ? 'तुमची वैदिक कुंडली लोड होत आहे...' : lang === 'hi' ? 'आपकी वैदिक कुंडली लोड हो रही है...' : 'Loading your cosmic coordinates...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // If user has not yet entered compulsory birth coordinates, display compulsory setup screen
   if (!birthData || !birthData.dob || !birthData.tob) {

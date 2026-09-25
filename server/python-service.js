@@ -74,10 +74,11 @@ export class PythonEphemerisService {
     return await runPythonEngine(payload);
   }
 
-  async calculateDailyGochar(natalData) {
+  async calculateDailyGochar(natalData, targetDate = null) {
     const payload = {
       action: 'daily',
       natalData,
+      targetDate,
     };
     return await runPythonEngine(payload);
   }

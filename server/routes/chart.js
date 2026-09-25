@@ -217,8 +217,15 @@ router.post('/calculate', async (req, res) => {
 // 4. Calculate Daily Gochar (Transit) vs Natal Chart
 router.post('/daily', async (req, res) => {
   try {
-    const natalData = req.body;
-    const daily = await ephemerisService.calculateDailyGochar(natalData);
+    let natalData = req.body;
+    let targetDate = null;
+    if (req.body && (req.body.natalData || req.body.chartData)) {
+      natalData = req.body.natalData || req.body.chartData;
+      targetDate = req.body.targetDate || null;
+    } else if (req.body && req.body.targetDate) {
+      targetDate = req.body.targetDate;
+    }
+    const daily = await ephemerisService.calculateDailyGochar(natalData, targetDate);
     return res.status(200).json(daily);
   } catch (err) {
     console.error('Calculate Daily Gochar Error:', err);

@@ -16,12 +16,30 @@ function getInitialView() {
   return 'landing';
 }
 
+// Helper: Synchronously retrieve active cached profile on startup to eliminate refresh glitches
+function getInitialBirthData() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const active = localStorage.getItem('astromath_active_profile');
+    if (active) {
+      const p = JSON.parse(active);
+      if (p?.dob && p?.tob) return p;
+    }
+    const guest = localStorage.getItem('astromath_guest_profile');
+    if (guest) {
+      const p = JSON.parse(guest);
+      if (p?.dob && p?.tob) return p;
+    }
+  } catch (e) {}
+  return null;
+}
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [coordinatesModalOpen, setCoordinatesModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState(getInitialView);
-  const [initialBirthData, setInitialBirthData] = useState(null);
+  const [initialBirthData, setInitialBirthData] = useState(getInitialBirthData);
 
   // Robust SPA Navigation with Browser History & Popstate Support
   const navigateTo = useCallback((view, replace = false) => {
@@ -74,9 +92,11 @@ export default function App() {
           .then((data) => {
             if (data?.profile?.dob && data?.profile?.tob) {
               setInitialBirthData(data.profile);
+              localStorage.setItem('astromath_active_profile', JSON.stringify(data.profile));
             } else {
               // Logged-in user has no profile saved in SQLite database yet
               setInitialBirthData(null);
+              localStorage.removeItem('astromath_active_profile');
               const path = (window.location.pathname || '').toLowerCase();
               if (path === '/dashboard') {
                 setCoordinatesModalOpen(true);
@@ -112,9 +132,7 @@ export default function App() {
     setCurrentUser(user);
     setAuthModalOpen(false);
 
-    // Wipe any previous user's cached profile from memory immediately
-    setInitialBirthData(null);
-
+    // Fetch this user's profile before deciding on coordinates modal
     const token = localStorage.getItem('astromath_token');
     if (token) {
       try {
@@ -124,6 +142,7 @@ export default function App() {
         const data = await res.json();
         if (data?.profile?.dob && data?.profile?.tob) {
           setInitialBirthData(data.profile);
+          localStorage.setItem('astromath_active_profile', JSON.stringify(data.profile));
           navigateTo('dashboard');
           return;
         }
@@ -138,10 +157,11 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    // Purge session tokens and generic keys to guarantee zero cross-user pollution
+    // Purge session tokens and cached keys to guarantee zero cross-user pollution
     localStorage.removeItem('astromath_user');
     localStorage.removeItem('astromath_token');
     localStorage.removeItem('astromath_profile');
+    localStorage.removeItem('astromath_active_profile');
     localStorage.removeItem('astromath_chart');
     setCurrentUser(null);
     setInitialBirthData(null);
@@ -151,6 +171,7 @@ export default function App() {
   const handleLaunchDashboard = (birthData) => {
     if (birthData && birthData.dob && birthData.tob) {
       setInitialBirthData(birthData);
+      localStorage.setItem('astromath_active_profile', JSON.stringify(birthData));
       navigateTo('dashboard');
       return;
     }
@@ -167,6 +188,7 @@ export default function App() {
 
   const handleCoordinatesSaved = (profile, chart) => {
     setInitialBirthData(profile);
+    localStorage.setItem('astromath_active_profile', JSON.stringify(profile));
     if (!currentUser) {
       localStorage.setItem('astromath_guest_profile', JSON.stringify(profile));
     }
@@ -176,24 +198,24 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-[#05070D] text-slate-100 overflow-x-hidden selection:bg-purple-500/30 selection:text-white">
-      {/* Procedural DarkVeil Fluid Silk Shader (Dynamic: Rich Dark Silk on Landing, Dimmed Calm on Dashboard) */}
+      {/* Procedural DarkVeil Fluid Silk Shader (Rich Dark Silk on Landing, Smooth Light Cosmic Silk on Dashboard) */}
       <div
         className={`fixed inset-0 pointer-events-none z-0 overflow-hidden transition-opacity duration-700 ${
-          currentView === 'landing' ? 'opacity-85' : 'opacity-20'
+          currentView === 'landing' ? 'opacity-85' : 'opacity-55'
         }`}
       >
         <DarkVeil
-          speed={currentView === 'landing' ? 0.35 : 0.15}
+          speed={currentView === 'landing' ? 0.35 : 0.18}
           warpAmount={0.28}
           hueShift={-18}
           noiseIntensity={0.012}
         />
-        {/* Ambient Obsidian Vignette Overlay */}
+        {/* Ambient Obsidian Vignette Overlay - Balanced for gentle visible cosmic gradient on dashboard */}
         <div
           className={`absolute inset-0 transition-all duration-700 ${
             currentView === 'landing'
               ? 'bg-gradient-to-b from-[#05070D]/60 via-[#05070D]/25 to-[#05070D]'
-              : 'bg-gradient-to-b from-[#05070D]/95 via-[#05070D]/85 to-[#05070D]'
+              : 'bg-gradient-to-b from-[#05070D]/75 via-[#05070D]/55 to-[#05070D]/85'
           }`}
         />
       </div>
