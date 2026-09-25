@@ -1,15 +1,13 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
 import { initDB } from './db.js';
-import { ephemerisService } from './swisseph-service.js';
+import { pythonEphemerisService } from './python-service.js';
 import authRoutes from './routes/auth.js';
 import chartRoutes from './routes/chart.js';
 import aiRoutes from './routes/ai.js';
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,9 +17,7 @@ const PORT = process.env.PORT || 5000;
 
 // Initialize Database & Swiss Ephemeris
 initDB();
-ephemerisService.init().then(() => {
-  console.log('🌌 Swiss Ephemeris WASM Engine Initialized successfully.');
-});
+console.log('🌌 Python Astronomical Ephemeris Engine Loaded (ephem 4.2.1 / Chitrapaksha Ayanamsa).');
 
 // Middlewares
 app.use(cors());

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Compass, Calendar, Clock, MapPin, User, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 
 const POPULAR_CITIES = [
@@ -17,6 +17,21 @@ export default function BirthCoordinatesModal({ isOpen, onClose, onProfileSaved,
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Dynamically sync formData with current profile or authenticated user
+  useEffect(() => {
+    if (isOpen) {
+      const savedUserStr = localStorage.getItem('astromath_user');
+      const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
+      setFormData({
+        name: currentProfile?.name || savedUser?.name || '',
+        dob: currentProfile?.dob || '',
+        tob: currentProfile?.tob || '',
+        city: currentProfile?.city || '',
+      });
+      setError('');
+    }
+  }, [isOpen, currentProfile]);
 
   if (!isOpen) return null;
 
@@ -65,10 +80,6 @@ export default function BirthCoordinatesModal({ isOpen, onClose, onProfileSaved,
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to compute coordinates');
-
-      // Persist in localStorage
-      localStorage.setItem('astromath_profile', JSON.stringify(data.profile));
-      localStorage.setItem('astromath_chart', JSON.stringify(data.chart));
 
       if (onProfileSaved) {
         onProfileSaved(data.profile, data.chart);

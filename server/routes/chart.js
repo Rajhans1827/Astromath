@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { pythonEphemerisService as ephemerisService } from '../python-service.js';
@@ -141,11 +142,11 @@ router.post('/save-profile', async (req, res) => {
   }
 });
 
-// 2. Retrieve User's Saved Birth Profile from Database
+// 2. Retrieve User's Saved Birth Profile from Database (Always recomputed fresh via Python)
 router.get('/profile', async (req, res) => {
   try {
     const userId = getAuthUserId(req);
-    const profileId = req.query.profileId;
+    const profileId = req.query.profileId ? parseInt(req.query.profileId) : null;
 
     let profile = null;
     if (userId) {
@@ -158,28 +159,19 @@ router.get('/profile', async (req, res) => {
       return res.status(200).json({ profile: null, chart: null });
     }
 
-    let chart = null;
-    if (profile.chart_data_json) {
-      try {
-        chart = JSON.parse(profile.chart_data_json);
-      } catch (e) {
-        chart = null;
-      }
-    }
-
-    if (!chart) {
-      chart = await ephemerisService.calculateBirthChart({
-        dob: profile.dob,
-        tob: profile.tob,
-        lat: profile.latitude,
-        lon: profile.longitude,
-        tz: profile.timezone,
-      });
-    }
+    // Always recompute fresh, verified astronomical chart using the Python ephem engine
+    const chart = await ephemerisService.calculateBirthChart({
+      dob: profile.dob,
+      tob: profile.tob,
+      lat: profile.latitude,
+      lon: profile.longitude,
+      tz: profile.timezone,
+    });
 
     return res.status(200).json({
       profile: {
         id: profile.id,
+        userId: profile.user_id,
         name: profile.name,
         dob: profile.dob,
         tob: profile.tob,

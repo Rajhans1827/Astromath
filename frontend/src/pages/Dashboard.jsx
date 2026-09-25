@@ -13,45 +13,26 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
   const [showMobileParams, setShowMobileParams] = useState(false);
   const [birthModalOpen, setBirthModalOpen] = useState(false);
 
-  // Pure Database-Driven State (Zero Hardcoded Defaults)
+  // Pure Database-Driven State (Zero Cross-User Pollution)
   const [birthData, setBirthData] = useState(() => {
     if (initialBirthData && initialBirthData.dob && initialBirthData.tob) {
       return initialBirthData;
     }
-    const saved = localStorage.getItem('astromath_profile');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.dob && parsed.tob) return parsed;
-      } catch (e) {
-        console.error('Failed to parse saved profile', e);
-      }
-    }
     return null;
   });
 
-  const [chartData, setChartData] = useState(() => {
-    const savedChart = localStorage.getItem('astromath_chart');
-    if (savedChart) {
-      try {
-        return JSON.parse(savedChart);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
-
+  const [chartData, setChartData] = useState(null);
   const [dailyData, setDailyData] = useState(null);
   const [aiReport, setAiReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [selectedChartType, setSelectedChartType] = useState('D1');
 
-  // Load from SQLite database on mount if user is logged in
+  // Load user-specific profile strictly from SQLite Database & Python Ephemeris
   useEffect(() => {
     const token = localStorage.getItem('astromath_token');
-    if (!birthData && token) {
+    if (token) {
+      setLoading(true);
       fetch('/api/chart/profile', {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -59,18 +40,31 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
         .then((data) => {
           if (data?.profile?.dob && data?.profile?.tob) {
             setBirthData(data.profile);
-            localStorage.setItem('astromath_profile', JSON.stringify(data.profile));
-            if (data.chart) {
-              setChartData(data.chart);
-              localStorage.setItem('astromath_chart', JSON.stringify(data.chart));
-            } else {
-              fetchChart(data.profile);
-            }
+            setChartData(data.chart);
+            fetchDaily(data.profile);
+          } else if (initialBirthData?.dob && initialBirthData?.tob) {
+            setBirthData(initialBirthData);
+            fetchChart(initialBirthData);
+          } else {
+            // Active user has no profile saved in SQLite DB yet
+            setBirthData(null);
+            setChartData(null);
+            setBirthModalOpen(true);
           }
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error('Failed to load profile for user:', err);
+        })
+        .finally(() => setLoading(false));
+    } else if (initialBirthData?.dob && initialBirthData?.tob) {
+      setBirthData(initialBirthData);
+      fetchChart(initialBirthData);
+    } else {
+      setBirthData(null);
+      setChartData(null);
+      setBirthModalOpen(true);
     }
-  }, []);
+  }, [user?.id]);
 
   // Fetch full astronomical chart from database / engine
   const fetchChart = async (dataToSubmit) => {
@@ -86,15 +80,16 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(target),
+        body: JSON.stringify({
+          ...target,
+          userId: user?.id || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
       setChartData(data.chart);
       setBirthData(data.profile);
-      localStorage.setItem('astromath_profile', JSON.stringify(data.profile));
-      localStorage.setItem('astromath_chart', JSON.stringify(data.chart));
 
       fetchDaily(data.profile);
     } catch (err) {

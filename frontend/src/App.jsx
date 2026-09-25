@@ -1,38 +1,105 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DarkVeil from './components/DarkVeil';
 import AuthModal from './components/AuthModal';
 import BirthCoordinatesModal from './components/BirthCoordinatesModal';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 
+// Helper: Determine initial route from URL path or hash
+function getInitialView() {
+  if (typeof window === 'undefined') return 'landing';
+  const path = (window.location.pathname || '').toLowerCase();
+  const hash = (window.location.hash || '').toLowerCase();
+  if (path === '/dashboard' || hash === '#/dashboard') {
+    return 'dashboard';
+  }
+  return 'landing';
+}
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [coordinatesModalOpen, setCoordinatesModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'dashboard'
+  const [currentView, setCurrentView] = useState(getInitialView);
   const [initialBirthData, setInitialBirthData] = useState(null);
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('astromath_user');
-    const token = localStorage.getItem('astromath_token');
-    if (savedUser && token) {
-      try {
-        const user = JSON.parse(savedUser);
-        setCurrentUser(user);
-      } catch (e) {
-        console.error('Failed to parse saved user', e);
+  // Robust SPA Navigation with Browser History & Popstate Support
+  const navigateTo = useCallback((view, replace = false) => {
+    setCurrentView(view);
+    const targetPath = view === 'dashboard' ? '/dashboard' : '/';
+    if (window.location.pathname !== targetPath) {
+      if (replace) {
+        window.history.replaceState({ view }, '', targetPath);
+      } else {
+        window.history.pushState({ view }, '', targetPath);
       }
     }
+  }, []);
 
-    const savedProfile = localStorage.getItem('astromath_profile');
-    if (savedProfile) {
+  // Sync browser back/forward buttons (Popstate and Hashchange)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = (window.location.pathname || '').toLowerCase();
+      const hash = (window.location.hash || '').toLowerCase();
+      if (path === '/dashboard' || hash === '#/dashboard') {
+        setCurrentView('dashboard');
+      } else {
+        setCurrentView('landing');
+      }
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, []);
+
+  // Session Hydration on Mount & Refresh: Strict User Isolation
+  useEffect(() => {
+    const token = localStorage.getItem('astromath_token');
+    const savedUserStr = localStorage.getItem('astromath_user');
+
+    if (token && savedUserStr) {
       try {
-        const profile = JSON.parse(savedProfile);
-        if (profile.dob && profile.tob) {
-          setInitialBirthData(profile);
-        }
+        const user = JSON.parse(savedUserStr);
+        setCurrentUser(user);
+
+        // Fetch THIS specific user's verified birth profile from backend SQLite database
+        fetch('/api/chart/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.profile?.dob && data?.profile?.tob) {
+              setInitialBirthData(data.profile);
+            } else {
+              // Logged-in user has no profile saved in SQLite database yet
+              setInitialBirthData(null);
+              const path = (window.location.pathname || '').toLowerCase();
+              if (path === '/dashboard') {
+                setCoordinatesModalOpen(true);
+              }
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to fetch user profile:', err);
+          });
       } catch (e) {
-        console.error('Failed to parse saved profile', e);
+        console.error('Failed to parse saved user:', e);
+      }
+    } else {
+      // Guest or logged-out session
+      setCurrentUser(null);
+      const guestProfile = localStorage.getItem('astromath_guest_profile');
+      if (guestProfile) {
+        try {
+          const parsed = JSON.parse(guestProfile);
+          if (parsed.dob && parsed.tob) setInitialBirthData(parsed);
+        } catch (e) {}
+      } else {
+        setInitialBirthData(null);
       }
     }
   }, []);
@@ -41,54 +108,70 @@ export default function App() {
     setAuthModalOpen(true);
   };
 
-  const handleAuthSuccess = (user) => {
+  const handleAuthSuccess = async (user) => {
     setCurrentUser(user);
     setAuthModalOpen(false);
 
-    // If user has saved profile, go to dashboard, else open coordinates modal
-    const savedProfile = localStorage.getItem('astromath_profile');
-    if (savedProfile) {
-      setCurrentView('dashboard');
-    } else {
-      setCoordinatesModalOpen(true);
+    // Wipe any previous user's cached profile from memory immediately
+    setInitialBirthData(null);
+
+    const token = localStorage.getItem('astromath_token');
+    if (token) {
+      try {
+        const res = await fetch('/api/chart/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data?.profile?.dob && data?.profile?.tob) {
+          setInitialBirthData(data.profile);
+          navigateTo('dashboard');
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile on login:', err);
+      }
     }
+
+    // New user with no profile in DB yet -> navigate to dashboard and open coordinates modal
+    navigateTo('dashboard');
+    setCoordinatesModalOpen(true);
   };
 
   const handleLogout = () => {
+    // Purge session tokens and generic keys to guarantee zero cross-user pollution
     localStorage.removeItem('astromath_user');
     localStorage.removeItem('astromath_token');
+    localStorage.removeItem('astromath_profile');
+    localStorage.removeItem('astromath_chart');
     setCurrentUser(null);
-    setCurrentView('landing');
+    setInitialBirthData(null);
+    navigateTo('landing');
   };
 
   const handleLaunchDashboard = (birthData) => {
     if (birthData && birthData.dob && birthData.tob) {
       setInitialBirthData(birthData);
-      setCurrentView('dashboard');
+      navigateTo('dashboard');
       return;
     }
 
-    // Check if saved profile exists
-    const savedProfile = localStorage.getItem('astromath_profile');
-    if (savedProfile) {
-      try {
-        const parsed = JSON.parse(savedProfile);
-        if (parsed.dob && parsed.tob) {
-          setInitialBirthData(parsed);
-          setCurrentView('dashboard');
-          return;
-        }
-      } catch (e) {}
+    // Check if user has active session
+    if (currentUser?.id && initialBirthData?.dob) {
+      navigateTo('dashboard');
+      return;
     }
 
-    // Compulsory: user must enter coordinates first
+    // Prompt coordinates modal for unconfigured users
     setCoordinatesModalOpen(true);
   };
 
   const handleCoordinatesSaved = (profile, chart) => {
     setInitialBirthData(profile);
+    if (!currentUser) {
+      localStorage.setItem('astromath_guest_profile', JSON.stringify(profile));
+    }
     setCoordinatesModalOpen(false);
-    setCurrentView('dashboard');
+    navigateTo('dashboard');
   };
 
   return (
@@ -105,7 +188,7 @@ export default function App() {
           hueShift={-18}
           noiseIntensity={0.012}
         />
-        {/* Ambient Obsidian Vignette Overlay (Lighter on Landing for deep cosmic silk, Strong on Dashboard for crisp readability) */}
+        {/* Ambient Obsidian Vignette Overlay */}
         <div
           className={`absolute inset-0 transition-all duration-700 ${
             currentView === 'landing'
@@ -127,7 +210,7 @@ export default function App() {
             user={currentUser}
             initialBirthData={initialBirthData}
             onLogout={handleLogout}
-            onReturnHome={() => setCurrentView('landing')}
+            onReturnHome={() => navigateTo('landing')}
           />
         )}
       </div>
