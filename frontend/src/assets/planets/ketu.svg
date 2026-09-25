@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Ketu Comet Core Radial Gradient -->
+    <radialGradient id="ketuCore" cx="45%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="30%" stop-color="#F97316" />
+      <stop offset="65%" stop-color="#B91C1C" />
+      <stop offset="90%" stop-color="#450A0A" />
+      <stop offset="100%" stop-color="#1A0202" />
+    </radialGradient>
+    
+    <!-- Comet Tail Glow -->
+    <radialGradient id="ketuTail" cx="50%" cy="50%" r="50%">
+      <stop offset="50%" stop-color="#EA580C" stop-opacity="0.8" />
+      <stop offset="80%" stop-color="#DC2626" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#7F1D1D" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="ketuGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer Fiery Nebula Aura -->
+  <circle cx="100" cy="100" r="84" fill="url(#ketuTail)" filter="url(#ketuGlow)" />
+
+  <!-- Mystic Comet Tail Tendrils -->
+  <path d="M 100 100 Q 140 60 175 40 Q 160 85 100 100 Z" fill="#FB923C" opacity="0.45" filter="blur(3px)" />
+  <path d="M 100 100 Q 145 130 180 155 Q 155 120 100 100 Z" fill="#F87171" opacity="0.4" filter="blur(3px)" />
+  <path d="M 100 100 Q 60 150 35 170 Q 75 130 100 100 Z" fill="#F97316" opacity="0.35" filter="blur(3px)" />
+
+  <!-- Ketu Solid Celestial Body -->
+  <circle cx="100" cy="100" r="58" fill="url(#ketuCore)" filter="url(#ketuGlow)" />
+
+  <!-- Mystical Inner Fire Highlights -->
+  <circle cx="90" cy="90" r="16" fill="#FDE047" opacity="0.75" filter="blur(2px)" />
+  <circle cx="110" cy="108" r="12" fill="#FB923C" opacity="0.6" filter="blur(2px)" />
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="venusCore" cx="40%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#FFFDF0" />
+      <stop offset="25%" stop-color="#FEF08A" />
+      <stop offset="55%" stop-color="#EAB308" />
+      <stop offset="85%" stop-color="#CA8A04" />
+      <stop offset="100%" stop-color="#713F12" />
+    </radialGradient>
+    <filter id="venusAura" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <clipPath id="venusDisc">
+      <circle cx="100" cy="100" r="66" />
+    </clipPath>
+  </defs>
+
+  <!-- Radiant Golden Venus Atmosphere -->
+  <circle cx="100" cy="100" r="72" fill="#FACC15" opacity="0.3" filter="url(#venusAura)" />
+
+  <!-- Base Sphere -->
+  <circle cx="100" cy="100" r="66" fill="url(#venusCore)" />
+
+  <g clip-path="url(#venusDisc)">
+    <!-- Swirling Sulfuric Acid Cloud Patterns (Y-shaped and Chevron patterns) -->
+    <path d="M 45 70 Q 95 90 155 75 Q 115 85 45 70 Z" fill="#FEF08A" opacity="0.4" filter="blur(2px)" />
+    <path d="M 40 100 Q 100 115 160 102 Q 110 110 40 100 Z" fill="#FDE047" opacity="0.35" filter="blur(2px)" />
+    <path d="M 50 130 Q 105 140 150 128 Q 110 135 50 130 Z" fill="#EAB308" opacity="0.3" filter="blur(3px)" />
+
+    <!-- 3D Shadow Terminator -->
+    <path d="M 100 34 A 66 66 0 0 1 166 100 A 66 66 0 0 1 100 166 A 66 74 0 0 0 100 34 Z" fill="#2E1700" opacity="0.55" />
+  </g>
+</svg>

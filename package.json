@@ -1,0 +1,26 @@
+{
+  "name": "astromath",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev:server": "node server/index.js",
+    "dev:client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build"
+  },
+  "bugs": {
+    "url": "https://github.com/Rajhans1827/Astromath/issues"
+  },
+  "homepage": "https://github.com/Rajhans1827/Astromath#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.10",
+    "swisseph-wasm": "^0.1.0"
+  }
+}

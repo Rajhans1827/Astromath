@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Solar Corona Outer Glow -->
+    <filter id="sunGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="16" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    
+    <!-- Sun Core Radial Gradient -->
+    <radialGradient id="sunCore" cx="45%" cy="45%" r="55%" fx="40%" fy="40%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="15%" stop-color="#FFF3B0" />
+      <stop offset="45%" stop-color="#F59E0B" />
+      <stop offset="75%" stop-color="#D97706" />
+      <stop offset="92%" stop-color="#B45309" />
+      <stop offset="100%" stop-color="#78350F" />
+    </radialGradient>
+    
+    <!-- Solar Flare Gradient -->
+    <radialGradient id="flareGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.9" />
+      <stop offset="85%" stop-color="#EA580C" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#7C2D12" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Exterior Corona Flares -->
+  <circle cx="100" cy="100" r="92" fill="url(#flareGrad)" filter="url(#sunGlow)" />
+  
+  <!-- Solar Body -->
+  <circle cx="100" cy="100" r="70" fill="url(#sunCore)" filter="url(#sunGlow)" />
+
+  <!-- Prominences / Flares -->
+  <path d="M 100 25 Q 105 15 112 28 Z" fill="#FDE68A" opacity="0.8" />
+  <path d="M 175 100 Q 185 108 172 115 Z" fill="#F59E0B" opacity="0.8" />
+  <path d="M 95 175 Q 88 186 82 173 Z" fill="#F59E0B" opacity="0.8" />
+  <path d="M 25 95 Q 14 88 28 80 Z" fill="#FDE68A" opacity="0.8" />
+  
+  <!-- Surface Granulation Accents -->
+  <circle cx="85" cy="80" r="14" fill="#FDE047" opacity="0.35" filter="blur(2px)" />
+  <circle cx="120" cy="110" r="18" fill="#F59E0B" opacity="0.4" filter="blur(3px)" />
+  <circle cx="75" cy="120" r="10" fill="#D97706" opacity="0.45" filter="blur(2px)" />
+</svg>

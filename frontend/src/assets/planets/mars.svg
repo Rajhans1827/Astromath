@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="marsGlow" cx="40%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#FFA07A" />
+      <stop offset="25%" stop-color="#E05A36" />
+      <stop offset="60%" stop-color="#B9381E" />
+      <stop offset="85%" stop-color="#7C2010" />
+      <stop offset="100%" stop-color="#3D0C06" />
+    </radialGradient>
+    <filter id="marsAura" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <clipPath id="marsDisc">
+      <circle cx="100" cy="100" r="68" />
+    </clipPath>
+  </defs>
+
+  <!-- Atmospheric Amber Sheen -->
+  <circle cx="100" cy="100" r="71" fill="#EA580C" opacity="0.3" filter="url(#marsAura)" />
+
+  <!-- Mars Planet Body -->
+  <circle cx="100" cy="100" r="68" fill="url(#marsGlow)" />
+
+  <g clip-path="url(#marsDisc)">
+    <!-- Dark Volcanic Plateaus (Syrtis Major) -->
+    <path d="M 60 70 Q 90 60 110 80 Q 95 110 75 105 Q 55 90 60 70 Z" fill="#581C0C" opacity="0.65" />
+    <path d="M 100 100 Q 140 105 150 130 Q 120 145 90 130 Z" fill="#451208" opacity="0.6" />
+    
+    <!-- Valles Marineris Canyon System -->
+    <path d="M 50 115 Q 85 125 125 120 Q 145 125 155 122" stroke="#2B0A05" stroke-width="3" fill="none" opacity="0.75" />
+    
+    <!-- North Polar Ice Cap -->
+    <ellipse cx="100" cy="36" rx="26" ry="8" fill="#F8FAFC" opacity="0.9" filter="blur(0.8px)" />
+    <ellipse cx="100" cy="38" rx="20" ry="5" fill="#E2E8F0" opacity="0.7" />
+
+    <!-- 3D Terminator Shadow -->
+    <path d="M 100 32 A 68 68 0 0 1 168 100 A 68 68 0 0 1 100 168 A 68 76 0 0 0 100 32 Z" fill="#1C0502" opacity="0.55" />
+  </g>
+</svg>

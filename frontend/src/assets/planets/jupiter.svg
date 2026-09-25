@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="jupSphere" cx="42%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFFBEB" />
+      <stop offset="35%" stop-color="#FDE68A" />
+      <stop offset="65%" stop-color="#D97706" />
+      <stop offset="88%" stop-color="#78350F" />
+      <stop offset="100%" stop-color="#3A1700" />
+    </radialGradient>
+    <clipPath id="jupDisc">
+      <circle cx="100" cy="100" r="76" />
+    </clipPath>
+    <filter id="jupGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Luminous Jovian Atmosphere -->
+  <circle cx="100" cy="100" r="79" fill="#F59E0B" opacity="0.25" filter="url(#jupGlow)" />
+
+  <!-- Base Sphere -->
+  <circle cx="100" cy="100" r="76" fill="url(#jupSphere)" />
+
+  <g clip-path="url(#jupDisc)">
+    <!-- Equatorial and Temperate Cloud Belts (Alternating Light & Dark Ammonia Bands) -->
+    <!-- North Polar Hood -->
+    <path d="M 30 45 Q 100 55 170 45 L 170 20 L 30 20 Z" fill="#92400E" opacity="0.4" />
+    
+    <!-- North Temperate Belt -->
+    <path d="M 25 65 Q 100 75 175 65 L 175 52 Q 100 62 25 52 Z" fill="#B45309" opacity="0.65" />
+    
+    <!-- North Equatorial Belt -->
+    <path d="M 24 88 Q 100 98 176 88 L 176 74 Q 100 84 24 74 Z" fill="#78350F" opacity="0.75" />
+    
+    <!-- Equatorial Zone (Bright cream/white ripples) -->
+    <path d="M 24 105 Q 100 115 176 105 L 176 92 Q 100 102 24 92 Z" fill="#FEF3C7" opacity="0.45" />
+    
+    <!-- South Equatorial Belt (House of Great Red Spot) -->
+    <path d="M 25 128 Q 100 138 175 128 L 175 110 Q 100 120 25 110 Z" fill="#9A3412" opacity="0.8" />
+    
+    <!-- Great Red Spot (Vortex Oval) -->
+    <ellipse cx="132" cy="122" rx="16" ry="10" fill="#DC2626" opacity="0.9" />
+    <ellipse cx="132" cy="122" rx="10" ry="6" fill="#F87171" opacity="0.8" />
+    <path d="M 120 122 Q 132 116 144 122" stroke="#7F1D1D" stroke-width="1.5" fill="none" />
+    
+    <!-- South Temperate Belt -->
+    <path d="M 30 148 Q 100 156 170 148 L 170 136 Q 100 144 30 136 Z" fill="#B45309" opacity="0.65" />
+    
+    <!-- South Polar Hood -->
+    <path d="M 40 165 Q 100 172 160 165 L 160 180 L 40 180 Z" fill="#78350F" opacity="0.45" />
+
+    <!-- 3D Shadow Terminator -->
+    <path d="M 100 24 A 76 76 0 0 1 176 100 A 76 76 0 0 1 100 176 A 76 86 0 0 0 100 24 Z" fill="#1C0A00" opacity="0.6" />
+  </g>
+</svg>

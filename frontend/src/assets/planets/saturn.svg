@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="240" height="200">
+  <defs>
+    <!-- Saturn Planet Sphere Gradient -->
+    <radialGradient id="saturnSphere" cx="44%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="35%" stop-color="#FCD34D" />
+      <stop offset="70%" stop-color="#D97706" />
+      <stop offset="90%" stop-color="#92400E" />
+      <stop offset="100%" stop-color="#451A03" />
+    </radialGradient>
+    
+    <!-- Saturn Ring Gradient -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E2D4B7" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="#C5AF89" stop-opacity="0.9" />
+      <stop offset="48%" stop-color="#8C7355" stop-opacity="0.95" />
+      <!-- Cassini Division gap -->
+      <stop offset="50%" stop-color="#000000" stop-opacity="0" />
+      <stop offset="53%" stop-color="#000000" stop-opacity="0" />
+      <stop offset="55%" stop-color="#B59E7A" stop-opacity="0.85" />
+      <stop offset="85%" stop-color="#D5C5A8" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#806847" stop-opacity="0.75" />
+    </linearGradient>
+
+    <clipPath id="saturnBodyClip">
+      <circle cx="120" cy="100" r="50" />
+    </clipPath>
+  </defs>
+
+  <!-- Back Portion of the Rings (behind planet body) -->
+  <g transform="rotate(-18 120 100)">
+    <ellipse cx="120" cy="100" rx="105" ry="32" fill="none" stroke="url(#ringGrad)" stroke-width="26" />
+    <!-- Fine inner C-ring trace -->
+    <ellipse cx="120" cy="100" rx="72" ry="21" fill="none" stroke="#D5C5A8" stroke-width="6" opacity="0.35" />
+  </g>
+
+  <!-- Saturn Planet Body -->
+  <circle cx="120" cy="100" r="50" fill="url(#saturnSphere)" />
+
+  <!-- Atmospheric Belts clipped to sphere -->
+  <g clip-path="url(#saturnBodyClip)">
+    <path d="M 70 75 Q 120 84 170 75 L 170 65 Q 120 74 70 65 Z" fill="#B45309" opacity="0.5" />
+    <path d="M 68 95 Q 120 104 172 95 L 172 85 Q 120 94 68 85 Z" fill="#92400E" opacity="0.6" />
+    <path d="M 70 115 Q 120 124 170 115 L 170 105 Q 120 114 70 105 Z" fill="#FDE68A" opacity="0.3" />
+    <path d="M 74 135 Q 120 142 166 135 L 166 125 Q 120 132 74 125 Z" fill="#78350F" opacity="0.5" />
+    
+    <!-- Shadow of Rings across the Planet -->
+    <path d="M 66 98 Q 120 116 174 98 L 174 105 Q 120 123 66 105 Z" fill="#0A0401" opacity="0.65" />
+
+    <!-- 3D Terminator Shadow on the Body -->
+    <path d="M 120 50 A 50 50 0 0 1 170 100 A 50 50 0 0 1 120 150 A 50 58 0 0 0 120 50 Z" fill="#1C0A00" opacity="0.6" />
+  </g>
+
+  <!-- Front Portion of the Rings (casts in front of planet body) -->
+  <g transform="rotate(-18 120 100)" clip-path="url(#frontRingsClip)">
+    <!-- We draw only bottom half by clipping -->
+  </g>
+  <g transform="rotate(-18 120 100)">
+    <!-- Front arc of rings -->
+    <path d="M 15 100 A 105 32 0 0 0 225 100" fill="none" stroke="url(#ringGrad)" stroke-width="26" />
+    <path d="M 48 100 A 72 21 0 0 0 192 100" fill="none" stroke="#D5C5A8" stroke-width="6" opacity="0.4" />
+  </g>
+</svg>
