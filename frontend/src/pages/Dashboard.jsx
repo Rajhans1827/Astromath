@@ -6,44 +6,97 @@ import {
 import KundaliChart from '../components/KundaliChart';
 import DashaTimeline from '../components/DashaTimeline';
 import AIChatbot from '../components/AIChatbot';
+import BirthCoordinatesModal from '../components/BirthCoordinatesModal';
 
 export default function Dashboard({ user, initialBirthData, onLogout, onReturnHome }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [showMobileParams, setShowMobileParams] = useState(false);
+  const [birthModalOpen, setBirthModalOpen] = useState(false);
 
-  const [birthData, setBirthData] = useState(
-    initialBirthData || {
-      name: user?.name || 'Alexander Vance',
-      dob: '1998-05-15',
-      tob: '08:30',
-      city: 'Pune, India',
-      lat: 18.5204,
-      lon: 73.8567,
-      tz: 5.5,
+  // Pure Database-Driven State (Zero Hardcoded Defaults)
+  const [birthData, setBirthData] = useState(() => {
+    if (initialBirthData && initialBirthData.dob && initialBirthData.tob) {
+      return initialBirthData;
     }
-  );
+    const saved = localStorage.getItem('astromath_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.dob && parsed.tob) return parsed;
+      } catch (e) {
+        console.error('Failed to parse saved profile', e);
+      }
+    }
+    return null;
+  });
 
-  const [chartData, setChartData] = useState(null);
+  const [chartData, setChartData] = useState(() => {
+    const savedChart = localStorage.getItem('astromath_chart');
+    if (savedChart) {
+      try {
+        return JSON.parse(savedChart);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [dailyData, setDailyData] = useState(null);
   const [aiReport, setAiReport] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [selectedChartType, setSelectedChartType] = useState('D1');
 
-  // Fetch full astronomical chart
+  // Load from SQLite database on mount if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem('astromath_token');
+    if (!birthData && token) {
+      fetch('/api/chart/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data?.profile?.dob && data?.profile?.tob) {
+            setBirthData(data.profile);
+            localStorage.setItem('astromath_profile', JSON.stringify(data.profile));
+            if (data.chart) {
+              setChartData(data.chart);
+              localStorage.setItem('astromath_chart', JSON.stringify(data.chart));
+            } else {
+              fetchChart(data.profile);
+            }
+          }
+        })
+        .catch(console.error);
+    }
+  }, []);
+
+  // Fetch full astronomical chart from database / engine
   const fetchChart = async (dataToSubmit) => {
+    const target = dataToSubmit || birthData;
+    if (!target || !target.dob || !target.tob) return;
+
     setLoading(true);
     try {
-      const res = await fetch('/api/chart/calculate', {
+      const token = localStorage.getItem('astromath_token');
+      const res = await fetch('/api/chart/save-profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSubmit || birthData),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(target),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setChartData(data);
 
-      fetchDaily(dataToSubmit || birthData);
+      setChartData(data.chart);
+      setBirthData(data.profile);
+      localStorage.setItem('astromath_profile', JSON.stringify(data.profile));
+      localStorage.setItem('astromath_chart', JSON.stringify(data.chart));
+
+      fetchDaily(data.profile);
     } catch (err) {
       console.error('Error fetching chart:', err);
     } finally {
@@ -52,11 +105,13 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
   };
 
   const fetchDaily = async (dataToSubmit) => {
+    const target = dataToSubmit || birthData;
+    if (!target) return;
     try {
       const res = await fetch('/api/chart/daily', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSubmit || birthData),
+        body: JSON.stringify(target),
       });
       const data = await res.json();
       if (res.ok) setDailyData(data);
@@ -90,14 +145,40 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
   };
 
   useEffect(() => {
-    fetchChart();
-  }, []);
+    if (birthData && !chartData) {
+      fetchChart(birthData);
+    } else if (birthData && chartData && !dailyData) {
+      fetchDaily(birthData);
+    }
+  }, [birthData]);
 
   const handleUpdateBirthData = (e) => {
     e.preventDefault();
     setShowMobileParams(false);
     fetchChart(birthData);
   };
+
+  const handleProfileCreated = (newProfile, newChart) => {
+    setBirthData(newProfile);
+    setChartData(newChart);
+    setBirthModalOpen(false);
+    fetchDaily(newProfile);
+  };
+
+  // If user has not yet entered compulsory birth coordinates, display compulsory setup screen
+  if (!birthData || !birthData.dob || !birthData.tob) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-20">
+        <BirthCoordinatesModal
+          isOpen={true}
+          onProfileSaved={handleProfileCreated}
+          onClose={() => {
+            if (onReturnHome) onReturnHome();
+          }}
+        />
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'overview', label: 'Matrix', icon: LayoutDashboard },
@@ -132,16 +213,16 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
             </span>
           </div>
           <span className="hidden sm:inline-block text-[11px] px-3 py-0.5 rounded-full bg-white/[0.05] text-slate-300 border border-white/10 font-mono">
-            {chartData ? `${chartData.lagna?.sign} Ascendant` : 'Computing...'}
+            {chartData ? `${chartData.lagna?.sign} Ascendant` : 'Aligning...'}
           </span>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Mobile Parameters Toggle Button */}
+          {/* Mobile Parameters Edit Button */}
           <button
             onClick={() => setShowMobileParams(!showMobileParams)}
             className="md:hidden px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-xs text-slate-200 flex items-center gap-1.5 transition-colors"
-            title="Edit Birth Parameters"
+            title="Edit Birth Coordinates"
           >
             <Settings2 className="w-3.5 h-3.5 text-amber-300" />
             <span className="text-[11px] font-medium">{birthData.name?.split(' ')[0]}</span>
@@ -152,6 +233,16 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
             <User className="w-3 h-3 text-slate-400" />
             <span className="font-medium">{birthData.name}</span>
           </div>
+
+          {/* Edit Coordinates Desktop Button */}
+          <button
+            onClick={() => setBirthModalOpen(true)}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs text-slate-200 transition-colors"
+            title="Edit Birth Details"
+          >
+            <Settings2 className="w-3.5 h-3.5 text-slate-400" />
+            <span>Coordinates</span>
+          </button>
 
           {onLogout && (
             <button
@@ -170,7 +261,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
         <div className="md:hidden p-4 bg-[#05070D]/95 backdrop-blur-3xl border-b border-white/15 animate-fadeIn">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">
-              Edit Birth Coordinates
+              Edit Birth Coordinates (Database-Driven)
             </h4>
             <button
               onClick={() => setShowMobileParams(false)}
@@ -184,6 +275,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               <label className="text-slate-400 uppercase tracking-wider text-[9px]">Full Name</label>
               <input
                 type="text"
+                required
                 value={birthData.name}
                 onChange={(e) => setBirthData({ ...birthData, name: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-0.5 focus:border-white/30 outline-none"
@@ -194,6 +286,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 <label className="text-slate-400 uppercase tracking-wider text-[9px]">Birth Date</label>
                 <input
                   type="date"
+                  required
                   value={birthData.dob}
                   onChange={(e) => setBirthData({ ...birthData, dob: e.target.value })}
                   className="w-full px-2 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-0.5 focus:border-white/30 outline-none"
@@ -203,6 +296,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 <label className="text-slate-400 uppercase tracking-wider text-[9px]">Birth Time</label>
                 <input
                   type="time"
+                  required
                   value={birthData.tob}
                   onChange={(e) => setBirthData({ ...birthData, tob: e.target.value })}
                   className="w-full px-2 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-0.5 focus:border-white/30 outline-none"
@@ -213,6 +307,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               <label className="text-slate-400 uppercase tracking-wider text-[9px]">Birth City / Location</label>
               <input
                 type="text"
+                required
                 value={birthData.city}
                 onChange={(e) => setBirthData({ ...birthData, city: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-0.5 focus:border-white/30 outline-none"
@@ -222,7 +317,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               type="submit"
               className="w-full py-2.5 rounded-xl bg-white text-slate-950 font-bold text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors mt-1"
             >
-              Recalculate Chart
+              Recalculate &amp; Save to DB
             </button>
           </form>
         </div>
@@ -258,7 +353,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                Parameters
+                Active Profile
               </h4>
               <button
                 onClick={() => fetchChart()}
@@ -274,6 +369,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Name</label>
                 <input
                   type="text"
+                  required
                   value={birthData.name}
                   onChange={(e) => setBirthData({ ...birthData, name: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-1 focus:border-white/30 outline-none transition-colors"
@@ -284,6 +380,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                   <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Date</label>
                   <input
                     type="date"
+                    required
                     value={birthData.dob}
                     onChange={(e) => setBirthData({ ...birthData, dob: e.target.value })}
                     className="w-full px-2 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-1 focus:border-white/30 outline-none transition-colors"
@@ -293,6 +390,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                   <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Time</label>
                   <input
                     type="time"
+                    required
                     value={birthData.tob}
                     onChange={(e) => setBirthData({ ...birthData, tob: e.target.value })}
                     className="w-full px-2 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-1 focus:border-white/30 outline-none transition-colors"
@@ -303,6 +401,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Location</label>
                 <input
                   type="text"
+                  required
                   value={birthData.city}
                   onChange={(e) => setBirthData({ ...birthData, city: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-white mt-1 focus:border-white/30 outline-none transition-colors"
@@ -312,7 +411,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 type="submit"
                 className="w-full py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/15 font-semibold text-[11px] uppercase tracking-wider transition-colors mt-2"
               >
-                Recalculate
+                Save &amp; Recalculate
               </button>
             </form>
           </div>
@@ -349,12 +448,18 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 Aligning Celestial Coordinates...
               </h3>
               <p className="text-xs text-slate-400 mt-1 font-light">
-                Computing harmonic divisional matrices and planetary periods.
+                Computing harmonic divisional matrices and planetary periods from your verified database record.
               </p>
             </div>
           ) : !chartData ? (
             <div className="p-8 text-center text-slate-400 bg-white/[0.03] rounded-3xl border border-white/10">
-              Unable to load coordinates. Please update parameters and recalculate.
+              <p>Unable to load coordinates.</p>
+              <button
+                onClick={() => setBirthModalOpen(true)}
+                className="mt-3 px-4 py-2 rounded-full bg-white text-slate-950 font-bold text-xs"
+              >
+                Enter Coordinates
+              </button>
             </div>
           ) : (
             <>
@@ -416,7 +521,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                   <div className="p-4 sm:p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 overflow-hidden shadow-2xl">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-4 sm:mb-5">
                       <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                        Planetary Coordinates & Dignities
+                        Planetary Coordinates &amp; Dignities
                       </h3>
                       <span className="text-[11px] sm:text-xs font-mono text-slate-400">
                         Chitrapaksha Offset: {chartData.ayanamsa?.toFixed(2)}°
@@ -465,7 +570,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 </div>
               )}
 
-              {/* TAB 2: HARMONIC CHARTS (Spacious, Large Kundali Centerpiece) */}
+              {/* TAB 2: HARMONIC CHARTS (Large Scale Centerpiece) */}
               {activeTab === 'kundali' && (
                 <div className="space-y-6">
                   {/* Selector Pills */}
@@ -491,7 +596,6 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
                   {/* Large Centerpiece Layout for the Kundali Chart */}
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 items-start">
-                    {/* Large Chart Container */}
                     <div className="xl:col-span-7 flex justify-center w-full">
                       <KundaliChart
                         chartType={selectedChartType}
@@ -502,7 +606,6 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       />
                     </div>
 
-                    {/* Chart Context & Interpretation Card */}
                     <div className="xl:col-span-5 p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-4 shadow-xl">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] text-amber-300 border border-white/10 text-xs font-medium">
                         <Sparkles className="w-3.5 h-3.5" />
@@ -618,7 +721,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       <div className="flex items-center gap-3">
                         <Briefcase className="w-5 h-5 text-white" />
                         <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                          Vocation & Public Standing (10th Harmonic)
+                          Vocation &amp; Public Standing (10th Harmonic)
                         </h3>
                       </div>
                       <button
@@ -634,24 +737,24 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400">10th House Lord</span>
                         <div className="font-bold text-white text-base mt-1">
-                          {chartData.careerAnalysis?.tenthLord || 'Mercury'}
+                          {chartData.careerAnalysis?.tenthLord || 'Evaluated'}
                         </div>
                         <span className="text-[11px] text-slate-300 font-mono">
-                          In {chartData.careerAnalysis?.tenthLordSign || 'Gemini'}
+                          In {chartData.careerAnalysis?.tenthLordSign || chartData.careerAnalysis?.tenthHouseSign || 'Harmonic Sign'}
                         </span>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400">Natural Domains</span>
                         <div className="font-bold text-white text-base mt-1">
-                          {chartData.careerAnalysis?.favorableDomains || 'Technology, Trade & Advisory'}
+                          {chartData.careerAnalysis?.favorableDomains || 'Calculated from 10th Lord'}
                         </div>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400">Orientation</span>
                         <div className="font-bold text-emerald-300 text-base mt-1">
-                          {chartData.careerAnalysis?.inclination || 'Independent Practice / Advisory'}
+                          {chartData.careerAnalysis?.inclination || 'Independent Advisory'}
                         </div>
                       </div>
                     </div>
@@ -673,7 +776,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       <div className="flex items-center gap-3">
                         <Heart className="w-5 h-5 text-white" />
                         <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                          Union, Partnership & Mars Harmonic (7th House)
+                          Union, Partnership &amp; Mars Harmonic (7th House)
                         </h3>
                       </div>
                       <button
@@ -706,7 +809,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                           </div>
                           <div className="text-xs text-slate-300 mt-1 font-light">
                             {chartData.marriageAnalysis?.doshaDetails ||
-                              'Mars is harmoniously situated outside the vulnerable relationship angles.'}
+                              `Mars is situating in House ${chartData.planets?.Mars?.house || 'neutral'}.`}
                           </div>
                         </div>
                       </div>
@@ -741,6 +844,14 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           )}
         </main>
       </div>
+
+      {/* Edit Coordinates Modal */}
+      <BirthCoordinatesModal
+        isOpen={birthModalOpen}
+        onClose={() => setBirthModalOpen(false)}
+        currentProfile={birthData}
+        onProfileSaved={handleProfileCreated}
+      />
     </div>
   );
 }

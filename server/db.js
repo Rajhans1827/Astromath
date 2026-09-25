@@ -82,7 +82,6 @@ export const verifyUser = (email) => {
 
 // OTP Queries
 export const saveOTP = (email, otpCode, expiresAt) => {
-  // Clear any existing active OTP for this email
   db.prepare('DELETE FROM otps WHERE email = ?').run(email);
   const stmt = db.prepare('INSERT INTO otps (email, otp_code, expires_at) VALUES (?, ?, ?)');
   stmt.run(email, otpCode, expiresAt.toISOString());
@@ -94,6 +93,38 @@ export const getLatestOTP = (email) => {
 
 export const deleteOTP = (email) => {
   db.prepare('DELETE FROM otps WHERE email = ?').run(email);
+};
+
+// Birth Profile Queries (Pure Database-Driven Architecture)
+export const saveBirthProfile = (userId, profile) => {
+  const { name, dob, tob, city, latitude, longitude, timezone, chartDataJson } = profile;
+
+  if (userId) {
+    const existing = db.prepare('SELECT id FROM birth_profiles WHERE user_id = ?').get(userId);
+    if (existing) {
+      db.prepare(`
+        UPDATE birth_profiles
+        SET name = ?, dob = ?, tob = ?, city = ?, latitude = ?, longitude = ?, timezone = ?, chart_data_json = ?, created_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(name, dob, tob, city, latitude, longitude, timezone, chartDataJson, existing.id);
+      return existing.id;
+    }
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO birth_profiles (user_id, name, dob, tob, city, latitude, longitude, timezone, chart_data_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const info = stmt.run(userId || null, name, dob, tob, city, latitude, longitude, timezone, chartDataJson);
+  return info.lastInsertRowid;
+};
+
+export const getBirthProfileByUserId = (userId) => {
+  return db.prepare('SELECT * FROM birth_profiles WHERE user_id = ? ORDER BY id DESC LIMIT 1').get(userId);
+};
+
+export const getBirthProfileById = (id) => {
+  return db.prepare('SELECT * FROM birth_profiles WHERE id = ?').get(id);
 };
 
 export default db;
