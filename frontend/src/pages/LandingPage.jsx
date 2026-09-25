@@ -1,6 +1,21 @@
-import { Sparkles, Compass, ArrowRight, Zap, Stars, CheckCircle2, ShieldCheck, Flame, Scale, Clock, Globe } from 'lucide-react';
+import {
+  Sparkles,
+  Compass,
+  ArrowRight,
+  Zap,
+  Stars,
+  CheckCircle2,
+  ShieldCheck,
+  Flame,
+  Scale,
+  Clock,
+  Globe,
+  MessageCircle,
+} from 'lucide-react';
 import OrbitImages from '../components/OrbitImages';
+import DriftWall from '../components/DriftWall';
 import { planetsList, planetImages } from '../assets/planets';
+import { WHATSAPP_TESTIMONIALS } from '../data/whatsappChats';
 
 export default function LandingPage({ onOpenAuth, onLaunchDashboard }) {
   return (
@@ -24,11 +39,11 @@ export default function LandingPage({ onOpenAuth, onLaunchDashboard }) {
           </div>
 
           {/* Links */}
-          <div className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest text-slate-300 font-medium">
+          <div className="hidden md:flex items-center gap-7 text-xs uppercase tracking-widest text-slate-300 font-medium">
             <a href="#orrery" className="hover:text-white transition-colors">The Orrery</a>
             <a href="#trust" className="hover:text-white transition-colors">The Science</a>
-            <a href="#harmonics" className="hover:text-white transition-colors">Divisional Charts</a>
             <a href="#pillars" className="hover:text-white transition-colors">Certainty</a>
+            <a href="#proof" className="hover:text-white transition-colors">Wall of Proof</a>
           </div>
 
           {/* Action Button */}
@@ -237,9 +252,56 @@ export default function LandingPage({ onOpenAuth, onLaunchDashboard }) {
             </table>
           </div>
         </div>
+      </section>
 
-        {/* 7. Bottom Call to Action Card */}
-        <div className="mt-16 p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-white/[0.06] via-purple-500/[0.08] to-white/[0.02] backdrop-blur-2xl border border-white/15 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
+      {/* 6. The Wall of Proof — 3D Drifting WhatsApp Chat Testimonials */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 relative overflow-hidden" id="proof">
+        <div className="max-w-6xl mx-auto text-center mb-12 sm:mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-xs text-slate-300 mb-4 shadow-xl">
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="font-semibold tracking-wider uppercase text-[10px] text-emerald-400">Verified User Feedback</span>
+            <span className="text-white/40">•</span>
+            <span>Unfiltered WhatsApp Experiences</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+            Real Precision. Real Lives Changed.
+          </h2>
+          <p className="mt-3.5 text-xs sm:text-base text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
+            Unfiltered conversations from entrepreneurs, surgeons, scholars, and professionals whose decisions are guided by AstroMath’s mathematical clarity. Move cursor to tilt in 3D; hover any tile to pause.
+          </p>
+        </div>
+
+        {/* 3D DriftWall Showcase Canvas */}
+        <div className="relative w-full max-w-7xl mx-auto h-[600px] sm:h-[700px] rounded-3xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-2xl shadow-2xl">
+          <DriftWall
+            items={WHATSAPP_TESTIMONIALS}
+            columns={5}
+            tileWidth={290}
+            tileHeight={190}
+            gap={22}
+            radius={18}
+            tilt={14}
+            turn={-12}
+            depth={130}
+            speed={32}
+            lift={80}
+            fade={0.5}
+            dim={0.68}
+            pauseOnHover={true}
+            overlayColor="#05070D"
+          />
+
+          {/* Interactive Instruction Pill */}
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 pointer-events-none z-20 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/15 text-[11px] text-slate-300 shadow-2xl flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Interactive 3D Drift • Hover to inspect details</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Bottom Call to Action Card */}
+      <section className="pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
+        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-white/[0.06] via-purple-500/[0.08] to-white/[0.02] backdrop-blur-2xl border border-white/15 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
           <div>
             <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Get Your Actual AstroMath Blueprint
