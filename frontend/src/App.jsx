@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Starfield from './components/Starfield';
+import DarkVeil from './components/DarkVeil';
 import AuthModal from './components/AuthModal';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
@@ -17,7 +17,6 @@ export default function App() {
       try {
         const user = JSON.parse(savedUser);
         setCurrentUser(user);
-        // Optional: auto navigate to dashboard if already logged in
       } catch (e) {
         console.error('Failed to parse saved user', e);
       }
@@ -41,29 +40,41 @@ export default function App() {
     setCurrentView('landing');
   };
 
-  const handleQuickCalculate = (birthData) => {
-    setInitialBirthData(birthData);
+  const handleLaunchDashboard = (birthData) => {
+    if (birthData) setInitialBirthData(birthData);
     setCurrentView('dashboard');
   };
 
   return (
-    <div className="relative min-h-screen bg-[#030712] text-slate-100 overflow-x-hidden">
-      {/* Animated Deep Space Canvas */}
-      <Starfield />
+    <div className="relative min-h-screen bg-[#05070D] text-slate-100 overflow-x-hidden selection:bg-purple-500/30 selection:text-white">
+      {/* Procedural DarkVeil Fluid Silk Shader (Zero Dots) */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-95">
+        <DarkVeil
+          speed={0.32}
+          warpAmount={0.3}
+          hueShift={-15}
+          noiseIntensity={0.015}
+        />
+        {/* Soft Ambient Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05070D]/40 via-transparent to-[#05070D]/90" />
+      </div>
 
-      {/* Main View Router */}
-      {currentView === 'landing' ? (
-        <LandingPage
-          onOpenAuth={handleOpenAuth}
-          onQuickCalculate={handleQuickCalculate}
-        />
-      ) : (
-        <Dashboard
-          user={currentUser}
-          initialBirthData={initialBirthData}
-          onLogout={handleLogout}
-        />
-      )}
+      {/* Main Views */}
+      <div className="relative z-10">
+        {currentView === 'landing' ? (
+          <LandingPage
+            onOpenAuth={handleOpenAuth}
+            onLaunchDashboard={handleLaunchDashboard}
+          />
+        ) : (
+          <Dashboard
+            user={currentUser}
+            initialBirthData={initialBirthData}
+            onLogout={handleLogout}
+            onReturnHome={() => setCurrentView('landing')}
+          />
+        )}
+      </div>
 
       {/* Authentication Modal */}
       <AuthModal
