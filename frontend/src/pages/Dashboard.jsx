@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
   Compass, LayoutDashboard, Sun, Moon, Briefcase, Heart, Calendar,
-  MessageSquare, Sparkles, User, RefreshCw, LogOut, CheckCircle2, AlertTriangle, ArrowLeft, Settings2
+  MessageSquare, Sparkles, User, RefreshCw, LogOut, CheckCircle2, AlertTriangle, ArrowLeft, Settings2,
+  Orbit, ShieldAlert, Activity, Eye
 } from 'lucide-react';
 import KundaliChart from '../components/KundaliChart';
 import DashaTimeline from '../components/DashaTimeline';
@@ -190,13 +191,14 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
       {/* Top Floating Glass Header */}
       <header className="sticky top-0 z-40 px-3 sm:px-8 py-2.5 sm:py-3.5 bg-black/50 backdrop-blur-2xl border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
-          {onReturnHome && (
+          {activeTab !== 'overview' && (
             <button
-              onClick={onReturnHome}
-              className="p-1.5 sm:p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-slate-300 hover:text-white transition-colors"
-              title="Return to Landing Page"
+              onClick={() => setActiveTab('overview')}
+              className="p-1.5 sm:p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5"
+              title="Back to Overview Matrix"
             >
               <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline text-xs text-slate-300 pr-1">Overview</span>
             </button>
           )}
           <div className="flex items-center gap-2 sm:gap-2.5">
@@ -636,64 +638,253 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 </div>
               )}
 
-              {/* TAB 3: DAILY TRANSITS */}
+              {/* TAB 3: DAILY TRANSITS & GOCHAR */}
               {activeTab === 'daily' && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-fadeIn">
                   {dailyData ? (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                        <div className="p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-                              Lunar Harmony (Chandra Bala)
+                      {/* Live Gochar Header & Panchanga Bar */}
+                      <div className="p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <Orbit className="w-5 h-5 text-amber-300 animate-spin-slow" />
+                              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                                Real-Time Planetary Transits (प्रत्यक्ष ग्रह गोचर)
+                              </h3>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1 font-light">
+                              Live astronomical positions computed dynamically via Python Ephemeris relative to your natal Lagna and Moon.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 self-start md:self-auto">
+                            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                              Transit Force:
                             </span>
-                            <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-bold">
-                              {dailyData.chandraBala?.status}
+                            <span className="px-3.5 py-1.5 rounded-full bg-white/[0.08] text-amber-300 border border-white/15 text-sm font-bold font-mono">
+                              {dailyData.overallScore || '7.5'} / 10
                             </span>
                           </div>
-                          <h3 className="text-2xl sm:text-3xl font-bold text-white mt-3">
-                            {dailyData.chandraBala?.score} / 10
-                          </h3>
-                          <p className="text-xs sm:text-sm text-slate-300 mt-2.5 font-light leading-relaxed">
-                            Today's transit Moon traverses your {dailyData.chandraBala?.houseFromMoon}th solar house. {dailyData.chandraBala?.description}
-                          </p>
                         </div>
 
-                        <div className="p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-                              Stellar Alignment (Tara Bala)
+                        {/* Live Panchanga Quick Bar */}
+                        {dailyData.panchang && (
+                          <div className="pt-2 flex flex-wrap gap-2 text-xs">
+                            <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-slate-300">
+                              <span className="text-slate-400 font-medium">तिथी: </span>
+                              <strong className="text-white">{dailyData.panchang.tithi}</strong>
                             </span>
-                            <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 text-xs font-bold">
-                              {dailyData.taraBala?.taraName}
+                            <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-slate-300">
+                              <span className="text-slate-400 font-medium">वार: </span>
+                              <strong className="text-white">{dailyData.panchang.vaar}</strong>
+                            </span>
+                            <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-slate-300">
+                              <span className="text-slate-400 font-medium">चंद्र नक्षत्र: </span>
+                              <strong className="text-white">{dailyData.panchang.nakshatra}</strong>
+                            </span>
+                            <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[11px] ml-auto">
+                              Python Ephem Real-Time
                             </span>
                           </div>
-                          <h3 className="text-2xl sm:text-3xl font-bold text-white mt-3">
-                            {dailyData.taraBala?.auspicious ? 'Auspicious Alignment' : 'Deliberate / Caution'}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-slate-300 mt-2.5 font-light leading-relaxed">
-                            {dailyData.taraBala?.description}
-                          </p>
+                        )}
+                      </div>
+
+                      {/* 4 Key Planetary Influences Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* 1. Shani Sade Sati & Dhayya */}
+                        <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                                शनी गोचर / साडेसाती
+                              </span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                dailyData.sadeSati?.hasSadeSati
+                                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                  : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                              }`}>
+                                {dailyData.sadeSati?.hasSadeSati ? 'प्रभाव सक्रिय' : 'साडेसाती नाही'}
+                              </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-bold text-white mt-2">
+                              {dailyData.sadeSati?.status || 'साडेसाती विश्लेषण'}
+                            </h4>
+                            <p className="text-[11px] text-slate-300 mt-2 font-light leading-relaxed">
+                              {dailyData.sadeSati?.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 2. Guru Gochar */}
+                        <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                                गुरू गोचर (Jupiter)
+                              </span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                dailyData.guruGochar?.isFavorable
+                                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-white/10 text-slate-300 border border-white/15'
+                              }`}>
+                                {dailyData.guruGochar?.isFavorable ? 'शुभ गोचर' : 'मध्यम'}
+                              </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-bold text-white mt-2">
+                              {dailyData.guruGochar?.status || 'गुरू भ्रमण'}
+                            </h4>
+                            <p className="text-[11px] text-slate-300 mt-2 font-light leading-relaxed">
+                              {dailyData.guruGochar?.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 3. Chandra Bala */}
+                        <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                                चंद्रबल (Lunar Force)
+                              </span>
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                                {dailyData.chandraBala?.status}
+                              </span>
+                            </div>
+                            <h4 className="text-xl font-bold text-white mt-2 font-mono">
+                              {dailyData.chandraBala?.score} / 10
+                            </h4>
+                            <p className="text-[11px] text-slate-300 mt-2 font-light leading-relaxed">
+                              {dailyData.chandraBala?.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 4. Tara Bala */}
+                        <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                                ताराबल (Stellar Alignment)
+                              </span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                dailyData.taraBala?.auspicious
+                                  ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                                  : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                              }`}>
+                                {dailyData.taraBala?.auspicious ? 'शुभ तारा' : 'सावध तारा'}
+                              </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-bold text-white mt-2">
+                              {dailyData.taraBala?.taraName || 'तारा चक्र'}
+                            </h4>
+                            <p className="text-[11px] text-slate-300 mt-2 font-light leading-relaxed">
+                              {dailyData.taraBala?.description}
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Daily Guidance */}
+                      {/* Live 9-Graha Real-Time Planetary Transit Table */}
+                      {dailyData.transitPlanets && (
+                        <div className="p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-amber-300" />
+                                आजचे प्रत्यक्ष नवग्रह गोचर कोष्टक (Live 9-Graha Transit)
+                              </h3>
+                              <p className="text-xs text-slate-400 font-light mt-0.5">
+                                प्रत्येक ग्रहाची आजची प्रत्यक्ष राशी, अंश, वक्री स्थिती आणि तुमच्या जन्मकुंडलीवरील परिणाम.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="overflow-x-auto no-scrollbar pt-2">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="border-b border-white/10 text-slate-400 font-medium text-[11px] uppercase tracking-wider">
+                                  <th className="py-3 px-3">ग्रह (Planet)</th>
+                                  <th className="py-3 px-3">चालू राशी व अंश</th>
+                                  <th className="py-3 px-3">नक्षत्र व चरण</th>
+                                  <th className="py-3 px-3 text-center">गती</th>
+                                  <th className="py-3 px-3 text-center">लग्नापासून</th>
+                                  <th className="py-3 px-3 text-center">चंद्रापासून</th>
+                                  <th className="py-3 px-3 text-center">गोचर फळ</th>
+                                  <th className="py-3 px-3">शास्त्रीय प्रभाव</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-white/5 font-light">
+                                {Object.values(dailyData.transitPlanets).map((p) => (
+                                  <tr key={p.name} className="hover:bg-white/[0.02] transition-colors">
+                                    <td className="py-3 px-3 whitespace-nowrap font-medium text-white flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-amber-400/80" />
+                                      <span>{p.name}</span>
+                                      <span className="text-slate-400 font-normal">({p.nameMr})</span>
+                                    </td>
+                                    <td className="py-3 px-3 whitespace-nowrap">
+                                      <span className="font-semibold text-slate-200">{p.sign}</span>
+                                      <span className="block text-[10px] text-slate-400 font-mono">{p.degreeFormatted}</span>
+                                    </td>
+                                    <td className="py-3 px-3 whitespace-nowrap text-slate-300 text-[11px]">
+                                      {p.nakshatra} <span className="text-slate-400">({p.pada} चरण)</span>
+                                    </td>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                        p.isRetrograde
+                                          ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                          : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                      }`}>
+                                        {p.isRetrograde ? 'वक्री (R)' : 'मार्गस्त'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap font-mono text-slate-200">
+                                      {p.houseFromLagna} वे स्थान
+                                    </td>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap font-mono text-slate-200">
+                                      {p.houseFromMoon} वे स्थान
+                                    </td>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                        p.isFavorable
+                                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                          : 'bg-white/10 text-slate-300 border border-white/15'
+                                      }`}>
+                                        {p.isFavorable ? 'शुभ' : 'मध्यम'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3 text-[11px] text-slate-300 max-w-xs leading-relaxed">
+                                      {p.effectSummary}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Daily Guidance & Forecast */}
                       <div className="p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-4 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <h3 className="text-base font-bold text-white flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-white" />
-                            Personalized Daily Forecast
-                          </h3>
+                          <div>
+                            <h3 className="text-base font-bold text-white flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-amber-300" />
+                              Personalized Daily Transit Synthesis (दैनिक गोचर मार्गदर्शन)
+                            </h3>
+                            <p className="text-xs text-slate-400 font-light mt-0.5">
+                              आजच्या ग्रहमानानुसार विशेष मार्गदर्शन आणि दिवसभरातील कृती योजना.
+                            </p>
+                          </div>
                           <button
                             onClick={() => fetchAiReport('daily')}
                             disabled={aiLoading}
-                            className="px-4 py-2 rounded-full bg-white text-slate-950 font-bold text-xs disabled:opacity-50 hover:bg-slate-100 transition-all shadow-md self-start sm:self-auto"
+                            className="px-5 py-2.5 rounded-full bg-white text-slate-950 font-bold text-xs disabled:opacity-50 hover:bg-slate-100 transition-all shadow-md self-start sm:self-auto"
                           >
-                            {aiLoading ? 'Synthesizing...' : 'Request Synthesis'}
+                            {aiLoading ? 'Synthesizing...' : 'Request Oracle Synthesis'}
                           </button>
                         </div>
 
-                        <div className="p-4 sm:p-5 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-light">
+                        <div className="p-4 sm:p-6 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-light">
                           {aiReport?.daily ||
                             dailyData.summary ||
                             'Click the button above to request a personalized daily synthesis grounded in today\'s planetary transit.'}
@@ -701,8 +892,10 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       </div>
                     </>
                   ) : (
-                    <div className="p-8 text-center text-slate-400 bg-white/[0.03] rounded-3xl border border-white/10">
-                      Aligning transit coordinates...
+                    <div className="p-12 text-center text-slate-400 bg-white/[0.03] rounded-3xl border border-white/10 flex flex-col items-center justify-center">
+                      <Compass className="w-8 h-8 text-white animate-spin-slow mb-3" />
+                      <p className="text-sm font-medium text-white">Aligning Real-Time Planetary Ephemeris...</p>
+                      <p className="text-xs text-slate-400 mt-1 font-light">Computing live 9-Graha transit coordinates and house alignments.</p>
                     </div>
                   )}
                 </div>
