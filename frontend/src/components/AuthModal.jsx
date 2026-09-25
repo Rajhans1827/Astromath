@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock, User, Phone, CheckCircle2, AlertCircle, X, ArrowRight, KeyRound } from 'lucide-react';
+import { Mail, Lock, User, Phone, CheckCircle2, AlertCircle, X, ArrowRight, ShieldCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
@@ -29,7 +29,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    // Auto-focus next field
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       if (nextInput) nextInput.focus();
@@ -43,7 +42,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
   };
 
-  // Submit Signup
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
@@ -53,7 +51,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       return;
     }
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Password must contain at least 6 characters');
       return;
     }
 
@@ -70,11 +68,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
+      if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-      setSuccessMsg('Verification OTP has been sent to your email!');
+      setSuccessMsg(`A 6-digit security code has been dispatched to ${formData.email}`);
       setMode('otp');
     } catch (err) {
       setError(err.message);
@@ -83,12 +79,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
   };
 
-  // Submit OTP Verification
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     const fullOtp = otp.join('');
     if (fullOtp.length < 6) {
-      setError('Please enter complete 6-digit OTP');
+      setError('Please enter the complete 6-digit security code');
       return;
     }
 
@@ -104,13 +99,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'OTP verification failed');
-      }
+      if (!res.ok) throw new Error(data.message || 'Verification failed');
 
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 75,
         origin: { y: 0.6 },
       });
 
@@ -125,7 +118,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
   };
 
-  // Resend OTP
   const handleResendOtp = async () => {
     setLoading(true);
     setError('');
@@ -137,7 +129,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setSuccessMsg('A new OTP has been sent to your email.');
+      setSuccessMsg('A fresh security code has been sent to your inbox.');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -145,7 +137,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     }
   };
 
-  // Submit Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -163,10 +154,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       if (!res.ok) {
         if (data.needsVerification) {
           setMode('otp');
-          setError('Please verify your email before logging in.');
+          setError('Email verification required. A new security code was sent.');
           return;
         }
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || 'Authentication failed');
       }
 
       localStorage.setItem('astromath_token', data.token);
@@ -181,64 +172,60 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md p-8 rounded-3xl cosmic-glass border border-amber-500/30 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl">
+      <div className="relative w-full max-w-md p-8 sm:p-10 rounded-3xl bg-[#080B14] border border-amber-500/25 shadow-2xl shadow-black">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Modal Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 mb-3">
-            {mode === 'otp' ? (
-              <KeyRound className="w-6 h-6" />
-            ) : mode === 'login' ? (
-              <Lock className="w-6 h-6" />
-            ) : (
-              <User className="w-6 h-6" />
-            )}
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 mb-4 shadow-lg shadow-amber-500/10">
+            <ShieldCheck className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-cinzel font-bold text-white tracking-wide">
+          <h2 className="text-2xl sm:text-3xl font-cinzel font-bold text-white tracking-wide">
             {mode === 'login'
-              ? 'Welcome to AstroMath'
+              ? 'Enter AstroMath'
               : mode === 'signup'
-              ? 'Create Your Cosmic Account'
-              : 'Verify Your Email'}
+              ? 'Create Your Sanctuary'
+              : 'Security Verification'}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 mt-2">
             {mode === 'login'
-              ? 'Access precision Swiss Ephemeris and Gemini AI insights'
+              ? 'Sign in to access your personal celestial matrix'
               : mode === 'signup'
-              ? 'Email verification via OTP is required for security'
+              ? 'Secure email verification ensures account integrity'
               : `Enter the 6-digit code sent to ${formData.email}`}
           </p>
         </div>
 
-        {/* Error / Success Alerts */}
+        {/* Alerts */}
         {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+          <div className="flex items-center gap-2.5 p-3 mb-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
         {successMsg && (
-          <div className="flex items-center gap-2 p-3 mb-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs">
+          <div className="flex items-center gap-2.5 p-3 mb-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* Mode: Login Form */}
+        {/* Login Form */}
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Email Address</label>
+              <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1.5">
+                Email Address
+              </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   type="email"
                   name="email"
@@ -246,15 +233,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="your.email@gmail.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Password</label>
+              <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1.5">
+                Password
+              </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   type="password"
                   name="password"
@@ -262,7 +251,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
@@ -270,50 +259,54 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-bold text-sm transition-all shadow-xl shadow-amber-500/20 disabled:opacity-50 mt-2"
             >
-              {loading ? 'Authenticating...' : 'Sign In to AstroMath'}
+              {loading ? 'Authenticating...' : 'Sign In'}
             </button>
 
-            <div className="text-center pt-2">
-              <span className="text-xs text-slate-400">Don't have an account? </span>
+            <div className="text-center pt-3">
+              <span className="text-xs text-slate-400">First time visiting? </span>
               <button
                 type="button"
                 onClick={() => {
                   setMode('signup');
                   setError('');
                 }}
-                className="text-xs text-amber-400 hover:underline font-medium"
+                className="text-xs text-amber-300 hover:underline font-semibold"
               >
-                Sign Up
+                Create Account
               </button>
             </div>
           </form>
         )}
 
-        {/* Mode: Signup Form */}
+        {/* Signup Form */}
         {mode === 'signup' && (
           <form onSubmit={handleSignup} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
+              <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1">
+                Full Name
+              </label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   type="text"
                   name="name"
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Rajhans Patil"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  placeholder="Alexander Vance"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Email (Gmail)</label>
+              <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1">
+                Email Address
+              </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   type="email"
                   name="email"
@@ -321,30 +314,34 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="name@gmail.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Mobile Number</label>
+              <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1">
+                Mobile Number
+              </label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
                   type="tel"
                   name="mobile"
                   required
                   value={formData.mobile}
                   onChange={handleInputChange}
-                  placeholder="+91 9876543210"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Password</label>
+                <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -352,11 +349,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Confirm</label>
+                <label className="block text-[11px] font-medium uppercase tracking-wider text-slate-300 mb-1">
+                  Confirm
+                </label>
                 <input
                   type="password"
                   name="confirmPassword"
@@ -364,7 +363,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
             </div>
@@ -372,9 +371,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 mt-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-bold text-sm transition-all shadow-xl shadow-amber-500/20 disabled:opacity-50 mt-3"
             >
-              {loading ? 'Sending OTP via Nodemailer...' : 'Register & Send OTP'}
+              {loading ? 'Dispatching Code...' : 'Register & Receive Code'}
             </button>
 
             <div className="text-center pt-2">
@@ -385,7 +384,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   setMode('login');
                   setError('');
                 }}
-                className="text-xs text-amber-400 hover:underline font-medium"
+                className="text-xs text-amber-300 hover:underline font-semibold"
               >
                 Sign In
               </button>
@@ -393,10 +392,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           </form>
         )}
 
-        {/* Mode: OTP Verification */}
+        {/* OTP Form */}
         {mode === 'otp' && (
           <form onSubmit={handleVerifyOtp} className="space-y-6">
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-2.5">
               {otp.map((digit, idx) => (
                 <input
                   key={idx}
@@ -406,7 +405,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   value={digit}
                   onChange={(e) => handleOtpChange(idx, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(idx, e)}
-                  className="w-12 h-14 text-center text-xl font-bold rounded-xl bg-slate-900 border border-slate-700 text-amber-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                  className="w-12 h-14 text-center text-xl font-mono font-bold rounded-2xl bg-slate-950 border border-slate-700 text-amber-300 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                 />
               ))}
             </div>
@@ -414,9 +413,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-bold text-sm transition-all shadow-xl shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? 'Verifying Code...' : 'Verify OTP & Launch Dashboard'}
+              {loading ? 'Authenticating...' : 'Verify Code & Enter Sanctuary'}
               <ArrowRight className="w-4 h-4" />
             </button>
 
@@ -425,16 +424,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 type="button"
                 onClick={handleResendOtp}
                 disabled={loading}
-                className="text-amber-400 hover:underline"
+                className="text-amber-300 hover:underline"
               >
-                Resend OTP
+                Resend Code
               </button>
               <button
                 type="button"
                 onClick={() => setMode('login')}
                 className="text-slate-400 hover:underline"
               >
-                Back to Login
+                Return to Login
               </button>
             </div>
           </form>

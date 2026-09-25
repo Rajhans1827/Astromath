@@ -1,43 +1,23 @@
-// North Indian Diamond Kundali Visualizer
-// Supports D1 (Lagna), D9 (Navamsha), and D10 (Dashamsha) charts
-
+// Luxury Celestial North Indian Diamond Chart Visualizer
 import React from 'react';
 
-const rashiNames = [
-  'Mesha (मेष)', 'Vrishabha (वृषभ)', 'Mithuna (मिथुन)', 'Karka (कर्क)',
-  'Simha (सिंह)', 'Kanya (कन्या)', 'Tula (तूळ)', 'Vrishchika (वृश्चिक)',
-  'Dhanu (धनु)', 'Makara (मकर)', 'Kumbha (कुंभ)', 'Meena (मीन)'
+const ZODIAC_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer',
+  'Leo', 'Virgo', 'Libra', 'Scorpio',
+  'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
 export default function KundaliChart({
   chartType = 'D1',
   lagnaSign = 1, // 1 to 12
-  houses = {}, // { 1: [{ name: 'Sun', deg: '14.2°', isRetro: false }], ... }
-  title = 'लग्न कुंडली (D1)',
-  size = 440,
+  houses = {},
+  title = 'Birth Matrix (D1)',
+  size = 460,
 }) {
-  // House geometry positions in a 400x400 SVG grid
-  // In North Indian chart:
-  // House 1: Top Center Diamond
-  // House 2: Top Right Triangle
-  // House 3: Right Top Triangle
-  // House 4: Right Center Diamond
-  // House 5: Right Bottom Triangle
-  // House 6: Bottom Right Triangle
-  // House 7: Bottom Center Diamond
-  // House 8: Bottom Left Triangle
-  // House 9: Left Bottom Triangle
-  // House 10: Left Center Diamond
-  // House 11: Left Top Triangle
-  // House 12: Top Left Triangle
-
-  // Note: Signs rotate counter-clockwise:
-  // Sign in House H = ((lagnaSign - 1 + (H - 1)) % 12) + 1
   const getHouseSign = (h) => {
     return ((lagnaSign - 1 + (h - 1)) % 12) + 1;
   };
 
-  // Label coordinates for Rashi number and Planets for each of the 12 houses
   const houseCoords = {
     1: { sign: { x: 200, y: 155 }, planets: { x: 200, y: 110 } },
     2: { sign: { x: 130, y: 70 }, planets: { x: 105, y: 45 } },
@@ -54,90 +34,96 @@ export default function KundaliChart({
   };
 
   return (
-    <div className="flex flex-col items-center select-none">
-      <div className="flex items-center justify-between w-full max-w-[440px] mb-3 px-2">
-        <h4 className="font-cinzel text-amber-400 font-semibold tracking-wider text-base">
-          {title}
-        </h4>
-        <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300">
-          Lagna: {rashiNames[lagnaSign - 1]}
+    <div className="flex flex-col items-center select-none w-full">
+      <div className="flex items-center justify-between w-full max-w-[460px] mb-3 px-1">
+        <div>
+          <h4 className="font-cinzel text-amber-200/90 font-semibold tracking-widest text-sm uppercase">
+            {title}
+          </h4>
+          <span className="text-[11px] text-slate-400 font-mono tracking-tight">
+            Ascendant • {ZODIAC_SIGNS[lagnaSign - 1]}
+          </span>
+        </div>
+        <span className="text-[10px] tracking-wider uppercase px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 font-medium">
+          Sidereal Wheel
         </span>
       </div>
 
-      <div className="relative p-2.5 rounded-2xl cosmic-glass border border-amber-500/20 shadow-2xl">
+      <div className="relative p-3 rounded-3xl bg-[#080B14]/80 backdrop-blur-2xl border border-amber-500/20 shadow-2xl shadow-black/80">
         <svg
           viewBox="0 0 400 400"
           width={size}
           height={size}
-          className="w-full max-w-[400px] h-auto drop-shadow-md"
+          className="w-full max-w-[420px] h-auto drop-shadow-xl"
         >
           <defs>
-            <linearGradient id="chartLineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#D97706" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.8" />
+            <linearGradient id="chartGold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F5E6C8" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#D4AF37" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#F5E6C8" stopOpacity="0.9" />
             </linearGradient>
-            <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+            <radialGradient id="centerAtmosphere" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.06" />
+              <stop offset="80%" stopColor="#05070D" stopOpacity="0" />
             </radialGradient>
           </defs>
 
-          {/* Background Center Radial Glow */}
-          <rect x="0" y="0" width="400" height="400" fill="url(#centerGlow)" rx="8" />
+          {/* Ethereal Subtle Center Glow */}
+          <rect x="0" y="0" width="400" height="400" fill="url(#centerAtmosphere)" rx="16" />
 
-          {/* Outer Square Border */}
+          {/* Outer Border */}
           <rect
-            x="4"
-            y="4"
-            width="392"
-            height="392"
+            x="6"
+            y="6"
+            width="388"
+            height="388"
             fill="none"
-            stroke="url(#chartLineGrad)"
-            strokeWidth="3"
-            rx="4"
+            stroke="url(#chartGold)"
+            strokeWidth="2"
+            rx="6"
           />
 
-          {/* Diagonal Cross Lines: (0,0)->(400,400) and (0,400)->(400,0) */}
-          <line x1="4" y1="4" x2="396" y2="396" stroke="url(#chartLineGrad)" strokeWidth="2" />
-          <line x1="4" y1="396" x2="396" y2="4" stroke="url(#chartLineGrad)" strokeWidth="2" />
+          {/* Diagonals */}
+          <line x1="6" y1="6" x2="394" y2="394" stroke="url(#chartGold)" strokeWidth="1.2" opacity="0.8" />
+          <line x1="6" y1="394" x2="394" y2="6" stroke="url(#chartGold)" strokeWidth="1.2" opacity="0.8" />
 
-          {/* Inner Diamond connecting midpoints: (200,0)-(400,200)-(200,400)-(0,200) */}
+          {/* Inner Diamond */}
           <polygon
-            points="200,4 396,200 200,396 4,200"
+            points="200,6 394,200 200,394 6,200"
             fill="none"
-            stroke="url(#chartLineGrad)"
-            strokeWidth="2.5"
+            stroke="url(#chartGold)"
+            strokeWidth="1.8"
           />
 
-          {/* House Contents */}
+          {/* Houses 1 to 12 */}
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((houseNum) => {
             const coord = houseCoords[houseNum];
             const signNum = getHouseSign(houseNum);
             const planetList = houses[houseNum] || [];
 
             return (
-              <g key={houseNum} className="house-group">
-                {/* Rashi / Sign Number */}
+              <g key={houseNum}>
+                {/* Zodiac Sign Number */}
                 <text
                   x={coord.sign.x}
                   y={coord.sign.y}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fill="#F59E0B"
-                  fontSize="13"
-                  fontWeight="bold"
+                  fill="#D4AF37"
+                  fontSize="12"
+                  fontFamily="'Cinzel', serif"
+                  fontWeight="600"
                   opacity="0.85"
                 >
                   {signNum}
                 </text>
 
-                {/* Planets residing in this house */}
+                {/* Planets */}
                 {planetList.length > 0 && (
                   <g>
                     {planetList.map((p, idx) => {
                       const total = planetList.length;
-                      const yOffset = (idx - (total - 1) / 2) * 16;
+                      const yOffset = (idx - (total - 1) / 2) * 15;
                       return (
                         <text
                           key={p.name}
@@ -145,14 +131,15 @@ export default function KundaliChart({
                           y={coord.planets.y + yOffset}
                           textAnchor="middle"
                           dominantBaseline="central"
-                          fill={p.isRetro ? '#F87171' : '#E2E8F0'}
-                          fontSize={total > 2 ? '10' : '11'}
+                          fill={p.isRetro ? '#FDA4AF' : '#F1F5F9'}
+                          fontSize={total > 2 ? '9.5' : '10.5'}
+                          fontFamily="'Plus Jakarta Sans', sans-serif"
                           fontWeight="600"
-                          className="hover:fill-amber-300 transition-colors"
+                          letterSpacing="0.02em"
                         >
                           {p.name}
                           {p.deg ? ` ${p.deg}` : ''}
-                          {p.isRetro ? ' (R)' : ''}
+                          {p.isRetro ? ' ℞' : ''}
                         </text>
                       );
                     })}
@@ -164,14 +151,14 @@ export default function KundaliChart({
         </svg>
       </div>
 
-      <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-400">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-          संख्या: राशी क्रमांक (1=मेष ... 12=मीन)
+      <div className="flex items-center gap-6 mt-3 text-[11px] text-slate-400">
+        <span className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
+          Numeral: Zodiac Sign (1=Aries ... 12=Pisces)
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-red-400 inline-block"></span>
-          (R): वक्री ग्रह (Retrograde)
+        <span className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 inline-block"></span>
+          ℞: Retrograde Motion
         </span>
       </div>
     </div>

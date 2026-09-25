@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Calendar, ChevronDown, ChevronRight, Clock, Star } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronRight, Clock, Sparkles } from 'lucide-react';
 
 const dashaColors = {
   Ketu: '#F97316',
-  Venus: '#EC4899',
+  Venus: '#F472B6',
   Sun: '#F59E0B',
-  Moon: '#94A3B8',
+  Moon: '#CBD5E1',
   Mars: '#EF4444',
-  Rahu: '#8B5CF6',
-  Jupiter: '#EAB308',
-  Saturn: '#6366F1',
-  Mercury: '#10B981',
+  Rahu: '#A78BFA',
+  Jupiter: '#FBBF24',
+  Saturn: '#818CF8',
+  Mercury: '#34D399',
 };
 
 export default function DashaTimeline({ dashaData = [] }) {
@@ -18,8 +18,8 @@ export default function DashaTimeline({ dashaData = [] }) {
 
   if (!dashaData || dashaData.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400 cosmic-glass rounded-2xl">
-        दशा माहिती उपलब्ध नाही. कृपया जन्म तपशील भरा.
+      <div className="p-8 text-center text-slate-400 rounded-3xl bg-[#080B14]/60 border border-white/5">
+        No planetary cycle data available. Please generate your birth matrix.
       </div>
     );
   }
@@ -32,38 +32,38 @@ export default function DashaTimeline({ dashaData = [] }) {
 
   return (
     <div className="space-y-6">
-      {/* Current Active Dasha Highlight Card */}
+      {/* Active Planetary Era */}
       {currentDasha && (
-        <div className="relative overflow-hidden rounded-2xl cosmic-glass-gold p-6 border border-amber-500/30">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-transparent p-6 sm:p-8 border border-amber-500/20 backdrop-blur-xl shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400">
-                <Clock className="w-4 h-4" />
-                सध्या चालू असलेली विंशोत्तरी महादशा (Current Active Period)
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-amber-300">
+                <Clock className="w-3.5 h-3.5" />
+                Active Planetary Era (Vimshottari Major Cycle)
               </div>
-              <h3 className="text-2xl font-cinzel font-bold text-white mt-1">
-                {currentDasha.lord} महादशा
+              <h3 className="text-2xl sm:text-3xl font-cinzel font-bold text-white mt-1.5">
+                {currentDasha.lord} Era
                 {currentDasha.currentAntar && (
-                  <span className="text-amber-400 text-lg font-sans ml-2">
-                    ({currentDasha.currentAntar} अंतर्दशा)
+                  <span className="text-amber-200/90 text-xl font-sans ml-3 font-normal">
+                    — {currentDasha.currentAntar} Sub-Period
                   </span>
                 )}
               </h3>
-              <p className="text-sm text-slate-300 mt-1">
-                कालावधी: {currentDasha.startDate} ते {currentDasha.endDate}
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 font-mono">
+                Duration: {currentDasha.startDate} to {currentDasha.endDate}
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-slate-950 font-bold text-xl shadow-xl shadow-black/40"
                 style={{ backgroundColor: dashaColors[currentDasha.lord] || '#F59E0B' }}
               >
                 {currentDasha.lord.substring(0, 2)}
               </div>
-              <div className="text-right">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-medium">
-                  <Star className="w-3 h-3 fill-current" /> Active Now
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-medium">
+                  <Sparkles className="w-3 h-3" /> Active Now
                 </span>
               </div>
             </div>
@@ -71,18 +71,18 @@ export default function DashaTimeline({ dashaData = [] }) {
         </div>
       )}
 
-      {/* Visual Timeline Bar */}
+      {/* 120-Year Horizon Bar */}
       <div>
-        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-          <span>१२० वर्षांची विंशोत्तरी दशा टाइमलाईन</span>
-          <span>जन्म ते १२० वर्षे</span>
+        <div className="flex items-center justify-between text-xs text-slate-400 mb-2.5 font-mono">
+          <span>120-Year Vimshottari Progression</span>
+          <span>Birth to 120 Years</span>
         </div>
-        <div className="h-6 w-full rounded-xl overflow-hidden flex bg-slate-900 border border-slate-800 p-0.5">
+        <div className="h-6 w-full rounded-xl overflow-hidden flex bg-slate-950 border border-white/10 p-0.5 shadow-inner">
           {dashaData.map((d) => (
             <div
               key={d.lord}
               className={`h-full relative group transition-all cursor-pointer ${
-                d.isCurrent ? 'ring-2 ring-white z-10' : 'opacity-85 hover:opacity-100'
+                d.isCurrent ? 'ring-2 ring-white z-10' : 'opacity-80 hover:opacity-100'
               }`}
               style={{
                 width: `${(d.years / 120) * 100}%`,
@@ -91,19 +91,19 @@ export default function DashaTimeline({ dashaData = [] }) {
               onClick={() => toggleMaha(d.lord)}
               title={`${d.lord} (${d.years} yrs): ${d.startDate} - ${d.endDate}`}
             >
-              <div className="hidden group-hover:block absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-white text-[11px] rounded px-2 py-1 whitespace-nowrap z-30 shadow-xl pointer-events-none">
-                {d.lord} ({d.years} yrs) • {d.startDate} - {d.endDate}
+              <div className="hidden group-hover:block absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 text-white text-[11px] rounded-lg px-2.5 py-1 whitespace-nowrap z-30 shadow-xl pointer-events-none font-mono">
+                {d.lord} ({d.years}y) • {d.startDate} to {d.endDate}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Expandable Dasha Breakdown List */}
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+      {/* Planetary Eras List */}
+      <div className="space-y-2.5">
+        <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
           <Calendar className="w-4 h-4 text-amber-400" />
-          सर्व ९ महादशा तपशील (Click to view Antardasha breakdown)
+          The Nine Planetary Eras (Click to inspect sub-cycles)
         </h4>
 
         {dashaData.map((d) => {
@@ -111,33 +111,33 @@ export default function DashaTimeline({ dashaData = [] }) {
           return (
             <div
               key={d.lord}
-              className={`rounded-xl border transition-all ${
+              className={`rounded-2xl border transition-all ${
                 d.isCurrent
-                  ? 'border-amber-500/40 bg-amber-500/5'
-                  : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  ? 'border-amber-500/30 bg-amber-500/5'
+                  : 'border-white/5 bg-[#080B14]/60 hover:border-white/15'
               }`}
             >
               <button
                 onClick={() => toggleMaha(d.lord)}
-                className="w-full flex items-center justify-between p-3.5 text-left"
+                className="w-full flex items-center justify-between p-4 text-left"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <div
-                    className="w-3.5 h-3.5 rounded-full"
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: dashaColors[d.lord] || '#F59E0B' }}
                   />
                   <div>
-                    <span className="font-semibold text-white mr-2">{d.lord} महादशा</span>
-                    <span className="text-xs text-slate-400">({d.years} वर्षे)</span>
+                    <span className="font-semibold text-white mr-2 text-sm">{d.lord} Era</span>
+                    <span className="text-xs text-slate-400">({d.years} Years)</span>
                     {d.isCurrent && (
-                      <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        Active
+                      <span className="ml-2.5 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        Current
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
                   <span>
                     {d.startDate} — {d.endDate}
                   </span>
@@ -149,27 +149,27 @@ export default function DashaTimeline({ dashaData = [] }) {
                 </div>
               </button>
 
-              {/* Sub-periods / Antardashas */}
+              {/* Sub-cycles */}
               {isExpanded && d.antardashas && d.antardashas.length > 0 && (
-                <div className="p-3 pt-0 border-t border-slate-800/80 mt-1">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+                <div className="p-4 pt-1 border-t border-white/5 mt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-2">
                     {d.antardashas.map((antar) => (
                       <div
                         key={antar.lord}
-                        className={`p-2.5 rounded-lg text-xs ${
+                        className={`p-3 rounded-xl text-xs border ${
                           antar.isCurrent
-                            ? 'bg-amber-500/15 border border-amber-500/40 text-amber-200'
-                            : 'bg-slate-800/50 text-slate-300'
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                            : 'bg-slate-900/60 border-white/5 text-slate-300'
                         }`}
                       >
                         <div className="flex items-center justify-between font-medium">
-                          <span>{d.lord} - {antar.lord}</span>
+                          <span>{d.lord} • {antar.lord}</span>
                           {antar.isCurrent && (
-                            <span className="text-[10px] text-amber-400">Current</span>
+                            <span className="text-[10px] text-amber-300">Active</span>
                           )}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-1">
-                          {antar.startDate} ते {antar.endDate}
+                        <div className="text-[11px] text-slate-400 mt-1 font-mono">
+                          {antar.startDate} to {antar.endDate}
                         </div>
                       </div>
                     ))}

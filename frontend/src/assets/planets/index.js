@@ -9,15 +9,15 @@ import rahuImg from './rahu.svg';
 import ketuImg from './ketu.svg';
 
 export const planetsList = [
-  { name: 'Sun (सूर्य)', src: sunImg, sign: 'Leo (सिंह)', nature: 'Soul & Authority', color: '#F59E0B' },
-  { name: 'Moon (चंद्र)', src: moonImg, sign: 'Cancer (कर्क)', nature: 'Mind & Emotions', color: '#E2E8F0' },
-  { name: 'Mars (मंगळ)', src: marsImg, sign: 'Aries/Scorpio', nature: 'Energy & Courage', color: '#EF4444' },
-  { name: 'Mercury (बुध)', src: mercuryImg, sign: 'Gemini/Virgo', nature: 'Intellect & Trade', color: '#10B981' },
-  { name: 'Jupiter (गुरू)', src: jupiterImg, sign: 'Sagittarius/Pisces', nature: 'Wisdom & Expansion', color: '#FBBF24' },
-  { name: 'Venus (शुक्र)', src: venusImg, sign: 'Taurus/Libra', nature: 'Love, Beauty & Wealth', color: '#EC4899' },
-  { name: 'Saturn (शनी)', src: saturnImg, sign: 'Capricorn/Aquarius', nature: 'Karma & Discipline', color: '#6366F1' },
-  { name: 'Rahu (राहू)', src: rahuImg, sign: 'Taurus/Gemini', nature: 'Ambition & Unconventional', color: '#8B5CF6' },
-  { name: 'Ketu (केतू)', src: ketuImg, sign: 'Scorpio/Sagittarius', nature: 'Moksha & Intuition', color: '#F97316' },
+  { name: 'Sun', sanskrit: 'Surya', glyph: '☉', src: sunImg, sign: 'Leo', nature: 'Soul & Core Vitality', color: '#F59E0B' },
+  { name: 'Moon', sanskrit: 'Chandra', glyph: '☽', src: moonImg, sign: 'Cancer', nature: 'Mind & Intuition', color: '#E2E8F0' },
+  { name: 'Mars', sanskrit: 'Mangala', glyph: '♂', src: marsImg, sign: 'Aries / Scorpio', nature: 'Ambition & Courage', color: '#EF4444' },
+  { name: 'Mercury', sanskrit: 'Budha', glyph: '☿', src: mercuryImg, sign: 'Gemini / Virgo', nature: 'Intellect & Eloquence', color: '#10B981' },
+  { name: 'Jupiter', sanskrit: 'Guru', glyph: '♃', src: jupiterImg, sign: 'Sagittarius / Pisces', nature: 'Wisdom & Expansion', color: '#FBBF24' },
+  { name: 'Venus', sanskrit: 'Shukra', glyph: '♀', src: venusImg, sign: 'Taurus / Libra', nature: 'Love, Art & Devotion', color: '#EC4899' },
+  { name: 'Saturn', sanskrit: 'Shani', glyph: '♄', src: saturnImg, sign: 'Capricorn / Aquarius', nature: 'Karma & Sovereignty', color: '#818CF8' },
+  { name: 'Rahu', sanskrit: 'North Node', glyph: '☊', src: rahuImg, sign: 'Exalted in Taurus', nature: 'Evolutionary Destiny', color: '#A78BFA' },
+  { name: 'Ketu', sanskrit: 'South Node', glyph: '☋', src: ketuImg, sign: 'Exalted in Scorpio', nature: 'Spiritual Liberation', color: '#FB923C' },
 ];
 
-export const planetImages = planetsList.map(p => p.src);
+export const planetImages = planetsList.map((p) => p.src);
