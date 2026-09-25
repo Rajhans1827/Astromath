@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { ephemerisService } from '../swisseph-service.js';
+import { pythonEphemerisService as ephemerisService } from '../python-service.js';
 import { saveBirthProfile, getBirthProfileByUserId, getBirthProfileById } from '../db.js';
 
 const router = express.Router();

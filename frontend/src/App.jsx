@@ -93,16 +93,26 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-[#05070D] text-slate-100 overflow-x-hidden selection:bg-purple-500/30 selection:text-white">
-      {/* Procedural DarkVeil Fluid Silk Shader (Dimmed & Calibrated for Pure Luxury) */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-35">
+      {/* Procedural DarkVeil Fluid Silk Shader (Dynamic: Rich Dark Silk on Landing, Dimmed Calm on Dashboard) */}
+      <div
+        className={`fixed inset-0 pointer-events-none z-0 overflow-hidden transition-opacity duration-700 ${
+          currentView === 'landing' ? 'opacity-85' : 'opacity-20'
+        }`}
+      >
         <DarkVeil
-          speed={0.25}
+          speed={currentView === 'landing' ? 0.35 : 0.15}
           warpAmount={0.28}
           hueShift={-18}
           noiseIntensity={0.012}
         />
-        {/* Soft Ambient Deep Obsidian Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#05070D]/80 via-[#05070D]/50 to-[#05070D]" />
+        {/* Ambient Obsidian Vignette Overlay (Lighter on Landing for deep cosmic silk, Strong on Dashboard for crisp readability) */}
+        <div
+          className={`absolute inset-0 transition-all duration-700 ${
+            currentView === 'landing'
+              ? 'bg-gradient-to-b from-[#05070D]/60 via-[#05070D]/25 to-[#05070D]'
+              : 'bg-gradient-to-b from-[#05070D]/95 via-[#05070D]/85 to-[#05070D]'
+          }`}
+        />
       </div>
 
       {/* Main Views */}
