@@ -7,6 +7,20 @@ const ZODIAC_SIGNS = [
   'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
+// Helper: Format degrees compactly for chart wheel (e.g. "28° 53' 12"" -> "28°")
+function formatChartDegree(degStr) {
+  if (!degStr) return '';
+  const match = degStr.match(/(\d+)°/);
+  if (match) {
+    return `${match[1]}°`;
+  }
+  const num = parseFloat(degStr);
+  if (!isNaN(num)) {
+    return `${Math.floor(num)}°`;
+  }
+  return degStr;
+}
+
 export default function KundaliChart({
   chartType = 'D1',
   lagnaSign = 1, // 1 to 12
@@ -18,19 +32,33 @@ export default function KundaliChart({
     return ((lagnaSign - 1 + (h - 1)) % 12) + 1;
   };
 
+  // Mathematically optimized centroids and safe internal zones for North Indian chart
+  // Canvas: 400x400 (Outer border: x:6, y:6, w:388, h:388)
   const houseCoords = {
-    1: { sign: { x: 200, y: 155 }, planets: { x: 200, y: 108 } },
-    2: { sign: { x: 130, y: 68 }, planets: { x: 105, y: 44 } },
-    3: { sign: { x: 68, y: 130 }, planets: { x: 44, y: 105 } },
-    4: { sign: { x: 155, y: 200 }, planets: { x: 108, y: 200 } },
-    5: { sign: { x: 68, y: 270 }, planets: { x: 44, y: 295 } },
-    6: { sign: { x: 130, y: 332 }, planets: { x: 105, y: 356 } },
-    7: { sign: { x: 200, y: 245 }, planets: { x: 200, y: 292 } },
-    8: { sign: { x: 270, y: 332 }, planets: { x: 295, y: 356 } },
-    9: { sign: { x: 332, y: 270 }, planets: { x: 356, y: 295 } },
-    10: { sign: { x: 245, y: 200 }, planets: { x: 292, y: 200 } },
-    11: { sign: { x: 332, y: 130 }, planets: { x: 356, y: 105 } },
-    12: { sign: { x: 270, y: 68 }, planets: { x: 295, y: 44 } },
+    // House 1: Top Center Diamond (Tanu Bhava)
+    1: { sign: { x: 200, y: 165 }, planets: { x: 200, y: 88 } },
+    // House 2: Top-Left Triangle
+    2: { sign: { x: 135, y: 68 }, planets: { x: 100, y: 38 } },
+    // House 3: Upper-Left Triangle
+    3: { sign: { x: 68, y: 135 }, planets: { x: 48, y: 95 } },
+    // House 4: Center-Left Diamond (Sukha Bhava)
+    4: { sign: { x: 160, y: 200 }, planets: { x: 95, y: 200 } },
+    // House 5: Lower-Left Triangle (Putra Bhava)
+    5: { sign: { x: 68, y: 265 }, planets: { x: 48, y: 305 } },
+    // House 6: Bottom-Left Triangle (Ripu Bhava)
+    6: { sign: { x: 135, y: 332 }, planets: { x: 100, y: 362 } },
+    // House 7: Bottom Center Diamond (Kalatra Bhava)
+    7: { sign: { x: 200, y: 235 }, planets: { x: 200, y: 310 } },
+    // House 8: Bottom-Right Triangle (Ayu Bhava)
+    8: { sign: { x: 265, y: 332 }, planets: { x: 297, y: 362 } },
+    // House 9: Lower-Right Triangle (Bhagya Bhava)
+    9: { sign: { x: 332, y: 265 }, planets: { x: 352, y: 305 } },
+    // House 10: Center-Right Diamond (Karma Bhava)
+    10: { sign: { x: 240, y: 200 }, planets: { x: 305, y: 200 } },
+    // House 11: Upper-Right Triangle (Labha Bhava)
+    11: { sign: { x: 332, y: 135 }, planets: { x: 352, y: 95 } },
+    // House 12: Top-Right Triangle (Vyaya Bhava)
+    12: { sign: { x: 265, y: 68 }, planets: { x: 297, y: 38 } },
   };
 
   return (
@@ -50,13 +78,13 @@ export default function KundaliChart({
         </span>
       </div>
 
-      {/* Chart Canvas Card (Enlarged, Spacious & Sharp) */}
-      <div className="relative w-full max-w-[560px] p-4 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl flex items-center justify-center">
+      {/* Chart Canvas Card (Spacious, Sharp & Boundary-Safe) */}
+      <div className="relative w-full max-w-[560px] p-3 sm:p-6 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl flex items-center justify-center">
         <svg
           viewBox="0 0 400 400"
           width="100%"
           height="100%"
-          className="w-full max-w-[500px] aspect-square drop-shadow-2xl"
+          className="w-full max-w-[500px] aspect-square drop-shadow-2xl overflow-visible"
         >
           <defs>
             <linearGradient id="chartGoldLarge" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -105,14 +133,14 @@ export default function KundaliChart({
 
             return (
               <g key={houseNum}>
-                {/* Zodiac Sign Number (Larger & Clearer) */}
+                {/* Zodiac Sign Number (Clear, Subtle & Well Positioned) */}
                 <text
                   x={coord.sign.x}
                   y={coord.sign.y}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="#94A3B8"
-                  fontSize="13.5"
+                  fontSize="12.5"
                   fontFamily="'Plus Jakarta Sans', sans-serif"
                   fontWeight="700"
                   opacity="0.9"
@@ -120,28 +148,40 @@ export default function KundaliChart({
                   {signNum}
                 </text>
 
-                {/* Planets with prominent labels */}
+                {/* Planets with Compact Boundary-Safe Labels */}
                 {planetList.length > 0 && (
                   <g>
                     {planetList.map((p, idx) => {
                       const total = planetList.length;
-                      const yOffset = (idx - (total - 1) / 2) * 16;
+                      const lineSpacing = total > 3 ? 12 : total > 2 ? 14 : 16;
+                      const yOffset = (idx - (total - 1) / 2) * lineSpacing;
+                      const degText = formatChartDegree(p.deg);
+
                       return (
                         <text
-                          key={p.name}
+                          key={p.name + idx}
                           x={coord.planets.x}
                           y={coord.planets.y + yOffset}
                           textAnchor="middle"
                           dominantBaseline="central"
                           fill={p.isRetro ? '#FDA4AF' : '#FFFFFF'}
-                          fontSize={total > 2 ? '10.5' : '12'}
+                          fontSize={total > 3 ? '9.5' : total > 1 ? '10.5' : '11.5'}
                           fontFamily="'Plus Jakarta Sans', sans-serif"
                           fontWeight="600"
-                          letterSpacing="0.02em"
+                          className="cursor-pointer"
                         >
-                          {p.name}
-                          {p.deg ? ` ${p.deg}` : ''}
-                          {p.isRetro ? ' ℞' : ''}
+                          <title>{`${p.name} ${p.deg || ''} ${p.isRetro ? '(वक्र / Retrograde)' : ''}`.trim()}</title>
+                          <tspan>{p.name}</tspan>
+                          {degText && (
+                            <tspan fill={p.isRetro ? '#FECDD3' : '#CBD5E1'} fontSize={total > 3 ? '8.5' : '9.5'} fontWeight="500">
+                              {` ${degText}`}
+                            </tspan>
+                          )}
+                          {p.isRetro && (
+                            <tspan fill="#F43F5E" fontSize="9" fontWeight="700">
+                              {' ℞'}
+                            </tspan>
+                          )}
                         </text>
                       );
                     })}
