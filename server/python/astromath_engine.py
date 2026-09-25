@@ -836,6 +836,568 @@ def calculate_daily_gochar(natal_data):
         'summary': f"आज {today_weekday}, {tithi_name} रोजी चंद्र {today_moon_data['sign']} राशीत असून चंद्रबल {chandra_score}/10 आहे. ९ पैकी {fav_count} ग्रह जन्मकुंडलीला अनुकूल भ्रमण करत आहेत. एकंदरीत दिवस {overall_score}/10 गुणांसह सकारात्मक राहील."
     }
 
+# ==============================================================================
+# NUMEROLOGY & COMPATIBILITY CALCULATION ENGINE
+# ==============================================================================
+
+CHALDEAN_MAP = {
+    'A': 1, 'I': 1, 'J': 1, 'Q': 1, 'Y': 1,
+    'B': 2, 'K': 2, 'R': 2,
+    'C': 3, 'G': 3, 'L': 3, 'S': 3,
+    'D': 4, 'M': 4, 'T': 4,
+    'E': 5, 'H': 5, 'N': 5, 'X': 5,
+    'U': 6, 'V': 6, 'W': 6,
+    'O': 7, 'Z': 7,
+    'F': 8, 'P': 8
+}
+
+NUMEROLOGY_ATTRIBUTES = {
+    1: {
+        'planetMr': 'सूर्य (Sun)', 'planetHi': 'सूर्य (Sun)', 'planetEn': 'Sun',
+        'element': 'अग्नी (Fire)',
+        'luckyDaysMr': ['रविवार', 'सोमवार'],
+        'luckyDaysHi': ['रविवार', 'सोमवार'],
+        'luckyDaysEn': ['Sunday', 'Monday'],
+        'luckyColorsMr': ['सोनेरी (Golden)', 'पिवळा (Yellow)', 'नारंगी (Orange)'],
+        'luckyColorsHi': ['सुनहरा (Golden)', 'पीला (Yellow)', 'नारंगी (Orange)'],
+        'luckyColorsEn': ['Golden', 'Yellow', 'Orange'],
+        'gemstoneMr': 'माणिक (Ruby)', 'gemstoneHi': 'माणिक (Ruby)', 'gemstoneEn': 'Ruby',
+        'friendly': [1, 2, 3, 5, 9],
+        'neutral': [4, 7],
+        'enemy': [6, 8],
+        'traitsMr': 'स्वाभिमानी, कुशल नेतृत्व, महत्त्वाकांक्षी, स्पष्टवक्ता आणि स्वतंत्र वृत्तीचे असतात.',
+        'traitsHi': 'स्वाभिमानी, कुशल नेतृत्व, महत्वाकांक्षी और स्वतंत्र विचारों वाले होते हैं।',
+        'traitsEn': 'Born leaders, ambitious, confident, independent, and goal-oriented.'
+    },
+    2: {
+        'planetMr': 'चंद्र (Moon)', 'planetHi': 'चंद्र (Moon)', 'planetEn': 'Moon',
+        'element': 'जल (Water)',
+        'luckyDaysMr': ['सोमवार', 'शुक्रवार'],
+        'luckyDaysHi': ['सोमवार', 'शुक्रवार'],
+        'luckyDaysEn': ['Monday', 'Friday'],
+        'luckyColorsMr': ['पांढरा (White)', 'चंदेरी (Silver)', 'क्रीम (Cream)'],
+        'luckyColorsHi': ['सफेद (White)', 'चांदी (Silver)', 'क्रीम (Cream)'],
+        'luckyColorsEn': ['White', 'Silver', 'Cream'],
+        'gemstoneMr': 'मोती (Pearl)', 'gemstoneHi': 'मोती (Pearl)', 'gemstoneEn': 'Pearl',
+        'friendly': [1, 2, 3, 5],
+        'neutral': [7, 8, 9],
+        'enemy': [4, 6],
+        'traitsMr': 'संवेदनशील, कल्पक, शांत, सौम्य आणि इतरांच्या भावना समजून घेणारे असतात.',
+        'traitsHi': 'संवेदनशील, कल्पनाशील, शांत, सौम्य और दूसरों की भावनाओं को समझने वाले होते हैं।',
+        'traitsEn': 'Empathetic, intuitive, peaceful, cooperative, and highly imaginative.'
+    },
+    3: {
+        'planetMr': 'गुरू (Jupiter)', 'planetHi': 'बृहस्पति (Jupiter)', 'planetEn': 'Jupiter',
+        'element': 'आकाश (Ether)',
+        'luckyDaysMr': ['गुरुवार', 'मंगळवार'],
+        'luckyDaysHi': ['गुरुवार', 'मंगलवार'],
+        'luckyDaysEn': ['Thursday', 'Tuesday'],
+        'luckyColorsMr': ['पिवळा (Yellow)', 'जांभळा (Violet)', 'गुलाबी (Pink)'],
+        'luckyColorsHi': ['पीला (Yellow)', 'बैंगनी (Violet)', 'गुलाबी (Pink)'],
+        'luckyColorsEn': ['Yellow', 'Violet', 'Pink'],
+        'gemstoneMr': 'पुष्कराज (Yellow Sapphire)', 'gemstoneHi': 'पुखराज (Yellow Sapphire)', 'gemstoneEn': 'Yellow Sapphire',
+        'friendly': [1, 2, 3, 9],
+        'neutral': [5, 7, 8],
+        'enemy': [4, 6],
+        'traitsMr': 'ज्ञानप्रिय, आध्यात्मिक, शिस्तप्रिय, मार्गदर्शक आणि उच्च मूल्यांचे पालन करणारे असतात.',
+        'traitsHi': 'ज्ञानप्रिय, आध्यात्मिक, मार्गदर्शक और उच्च नैतिक मूल्यों वाले होते हैं।',
+        'traitsEn': 'Wise, optimistic, philosophical, generous, and natural teachers or advisors.'
+    },
+    4: {
+        'planetMr': 'राहू (Rahu)', 'planetHi': 'राहु (Rahu)', 'planetEn': 'Rahu',
+        'element': 'वायू (Air)',
+        'luckyDaysMr': ['शनिवार', 'रविवार'],
+        'luckyDaysHi': ['शनिवार', 'रविवार'],
+        'luckyDaysEn': ['Saturday', 'Sunday'],
+        'luckyColorsMr': ['निळा (Blue)', 'राखाडी (Grey)', 'खाकी'],
+        'luckyColorsHi': ['नीला (Blue)', 'धूसर (Grey)', 'खाकी'],
+        'luckyColorsEn': ['Blue', 'Grey', 'Khaki'],
+        'gemstoneMr': 'गोमेद (Hessonite)', 'gemstoneHi': 'गोमेद (Hessonite)', 'gemstoneEn': 'Hessonite',
+        'friendly': [1, 5, 6, 7, 8],
+        'neutral': [3],
+        'enemy': [2, 4, 9],
+        'traitsMr': 'कष्टाळू, क्रांतिकारी विचार, प्रॅक्टिकल, तांत्रिक बुद्धिमत्ता आणि वेगळी वाट निवडणारे.',
+        'traitsHi': 'परिश्रमी, व्यावहारिक, तकनीकी बुद्धि और लीक से हटकर सोचने वाले होते हैं।',
+        'traitsEn': 'Practical, unconventional, hardworking, analytical, and reform-minded.'
+    },
+    5: {
+        'planetMr': 'बुध (Mercury)', 'planetHi': 'बुध (Mercury)', 'planetEn': 'Mercury',
+        'element': 'पृथ्वी (Earth)',
+        'luckyDaysMr': ['बुधवार', 'शुक्रवार'],
+        'luckyDaysHi': ['बुधवार', 'शुक्रवार'],
+        'luckyDaysEn': ['Wednesday', 'Friday'],
+        'luckyColorsMr': ['हिरवा (Green)', 'हलका निळा', 'पांढरा'],
+        'luckyColorsHi': ['हरा (Green)', 'हल्का नीला', 'सफेद'],
+        'luckyColorsEn': ['Green', 'Light Blue', 'White'],
+        'gemstoneMr': 'पाचू (Emerald)', 'gemstoneHi': 'पन्ना (Emerald)', 'gemstoneEn': 'Emerald',
+        'friendly': [1, 2, 3, 5, 6],
+        'neutral': [4, 7, 8, 9],
+        'enemy': [],
+        'traitsMr': 'चतुर, उत्तम संवादकौशल्य, व्यापारी वृत्ती, हजरजबाबी आणि जलद निर्णय घेणारे.',
+        'traitsHi': 'बुद्धिमान, कुशल वक्ता, व्यापारिक बुद्धि और त्वरित निर्णय लेने वाले होते हैं।',
+        'traitsEn': 'Adaptable, quick-witted, articulate, business-savvy, and intellectually curious.'
+    },
+    6: {
+        'planetMr': 'शुक्र (Venus)', 'planetHi': 'शुक्र (Venus)', 'planetEn': 'Venus',
+        'element': 'जल (Water)',
+        'luckyDaysMr': ['शुक्रवार', 'मंगळवार'],
+        'luckyDaysHi': ['शुक्रवार', 'मंगलवार'],
+        'luckyDaysEn': ['Friday', 'Tuesday'],
+        'luckyColorsMr': ['चमकदार पांढरा', 'गुलाबी', 'फिकट निळा'],
+        'luckyColorsHi': ['चमकीला सफेद', 'गुलाबी', 'हल्का नीला'],
+        'luckyColorsEn': ['Bright White', 'Pink', 'Light Blue'],
+        'gemstoneMr': 'हिरा / ओपल (Diamond/Opal)', 'gemstoneHi': 'हीरा / ओपल (Diamond/Opal)', 'gemstoneEn': 'Diamond or Opal',
+        'friendly': [4, 5, 6, 7, 8],
+        'neutral': [9],
+        'enemy': [1, 2, 3],
+        'traitsMr': 'कलाप्रेमी, आकर्षक व्यक्तिमत्त्व, सौंदर्यवादी, प्रेमळ आणि ऐश्वर्यसंपन्न जीवनशैली आवडणारे.',
+        'traitsHi': 'कलाप्रेमी, आकर्षक व्यक्तित्व, सौम्य, और सुख-सुविधाओं से युक्त जीवन पसंद करने वाले।',
+        'traitsEn': 'Charming, artistic, affectionate, value harmony, beauty, and luxury.'
+    },
+    7: {
+        'planetMr': 'केतू (Ketu)', 'planetHi': 'केतु (Ketu)', 'planetEn': 'Ketu',
+        'element': 'जल / आकाश',
+        'luckyDaysMr': ['सोमवार', 'गुरुवार'],
+        'luckyDaysHi': ['सोमवार', 'गुरुवार'],
+        'luckyDaysEn': ['Monday', 'Thursday'],
+        'luckyColorsMr': ['फिकट हिरवा', 'पांढरा', 'फिकट पिवळा'],
+        'luckyColorsHi': ['हल्का हरा', 'सफेद', 'हल्का पीला'],
+        'luckyColorsEn': ['Light Green', 'White', 'Light Yellow'],
+        'gemstoneMr': 'लसण्या (Cat\'s Eye)', 'gemstoneHi': 'लहसुनिया (Cat\'s Eye)', 'gemstoneEn': 'Cat\'s Eye',
+        'friendly': [1, 4, 5, 6],
+        'neutral': [2, 3, 8],
+        'enemy': [7, 9],
+        'traitsMr': 'गूढ विद्या, संशोधन, अंतर्ज्ञानी, एकांतप्रिय, तत्त्वचिंतक आणि स्वतंत्र विचारवंत.',
+        'traitsHi': 'शोधप्रिय, आध्यात्मिक, गहरी सोच वाले और एकांतप्रिय दार्शनिक होते हैं।',
+        'traitsEn': 'Spiritual, analytical, introspective, researchers, and deeply intuitive.'
+    },
+    8: {
+        'planetMr': 'शनी (Saturn)', 'planetHi': 'शनि (Saturn)', 'planetEn': 'Saturn',
+        'element': 'वायू (Air)',
+        'luckyDaysMr': ['शनिवार', 'शुक्रवार'],
+        'luckyDaysHi': ['शनिवार', 'शुक्रवार'],
+        'luckyDaysEn': ['Saturday', 'Friday'],
+        'luckyColorsMr': ['गडद निळा (Dark Blue)', 'काळा (Black)', 'जांभळा'],
+        'luckyColorsHi': ['गहरा नीला (Dark Blue)', 'काला (Black)', 'बैंगनी'],
+        'luckyColorsEn': ['Dark Blue', 'Black', 'Dark Violet'],
+        'gemstoneMr': 'नीलम (Blue Sapphire)', 'gemstoneHi': 'नीलम (Blue Sapphire)', 'gemstoneEn': 'Blue Sapphire',
+        'friendly': [3, 4, 5, 6, 7],
+        'neutral': [2],
+        'enemy': [1, 8, 9],
+        'traitsMr': 'कठोर परिश्रमी, संयमी, न्यायप्रिय, दूरदृष्टी असलेले आणि संघर्षातून मोठे यश मिळवणारे.',
+        'traitsHi': 'कठिन परिश्रमी, धैर्यवान, न्यायप्रिय और संघर्ष से बड़ी सफलता पाने वाले होते हैं।',
+        'traitsEn': 'Disciplined, persevering, just, realistic, and destined for durable long-term success.'
+    },
+    9: {
+        'planetMr': 'मंगळ (Mars)', 'planetHi': 'मंगल (Mars)', 'planetEn': 'Mars',
+        'element': 'अग्नी (Fire)',
+        'luckyDaysMr': ['मंगळवार', 'गुरुवार'],
+        'luckyDaysHi': ['मंगलवार', 'गुरुवार'],
+        'luckyDaysEn': ['Tuesday', 'Thursday'],
+        'luckyColorsMr': ['लाल (Red)', 'गुलाबी (Pink)', 'केशरी / भगवा'],
+        'luckyColorsHi': ['लाल (Red)', 'गुलाबी (Pink)', 'केसरिया'],
+        'luckyColorsEn': ['Red', 'Pink', 'Saffron'],
+        'gemstoneMr': 'पोवळे (Red Coral)', 'gemstoneHi': 'मूंगा (Red Coral)', 'gemstoneEn': 'Red Coral',
+        'friendly': [1, 2, 3, 5],
+        'neutral': [6, 7],
+        'enemy': [4, 8, 9],
+        'traitsMr': 'ऊर्जावान, धाडसी, निडर, स्पष्ट आणि संकटांवर मात करण्याची अफाट जिद्द असलेले.',
+        'traitsHi': 'ऊर्जावान, साहसी, निडर और चुनौतियों का डटकर सामना करने वाले होते हैं।',
+        'traitsEn': 'Dynamic, courageous, passionate, protective, and driven by challenges.'
+    }
+}
+
+def sum_to_single_digit(num):
+    s = abs(num)
+    while s > 9:
+        s = sum(int(d) for d in str(s))
+    return s if s != 0 else 9
+
+def calculate_numerology(name, dob):
+    parts = [int(p) for p in dob.split('-')]
+    year, month, day = parts[0], parts[1], parts[2]
+    
+    mulank = sum_to_single_digit(day)
+    bhagyank = sum_to_single_digit(sum(int(d) for d in f"{year:04d}{month:02d}{day:02d}"))
+    
+    clean_name = ''.join(c for c in name.upper() if c.isalpha())
+    name_sum = sum(CHALDEAN_MAP.get(c, 0) for c in clean_name)
+    namank = sum_to_single_digit(name_sum) if clean_name else mulank
+    
+    attr_mul = NUMEROLOGY_ATTRIBUTES[mulank]
+    attr_bhag = NUMEROLOGY_ATTRIBUTES[bhagyank]
+    
+    return {
+        'name': name,
+        'dob': dob,
+        'mulank': mulank,
+        'bhagyank': bhagyank,
+        'namank': namank,
+        'mulankLord': attr_mul['planetMr'],
+        'bhagyankLord': attr_bhag['planetMr'],
+        'luckyDays': attr_mul['luckyDaysMr'],
+        'luckyColors': attr_mul['luckyColorsMr'],
+        'gemstone': attr_mul['gemstoneMr'],
+        'friendlyNumbers': attr_mul['friendly'],
+        'enemyNumbers': attr_mul['enemy'],
+        'personalitySummary': attr_mul['traitsMr'],
+        'personalityHi': attr_mul['traitsHi'],
+        'personalityEn': attr_mul['traitsEn']
+    }
+
+def calculate_couple_numerology(p1, p2):
+    num1 = calculate_numerology(p1.get('name', 'Partner 1'), p1['dob'])
+    num2 = calculate_numerology(p2.get('name', 'Partner 2'), p2['dob'])
+    
+    m1, b1 = num1['mulank'], num1['bhagyank']
+    m2, b2 = num2['mulank'], num2['bhagyank']
+    
+    attr1 = NUMEROLOGY_ATTRIBUTES[m1]
+    attr2 = NUMEROLOGY_ATTRIBUTES[m2]
+    
+    m_is_friend = (m2 in attr1['friendly']) or (m1 in attr2['friendly'])
+    m_is_enemy = (m2 in attr1['enemy']) or (m1 in attr2['enemy'])
+    
+    b_attr1 = NUMEROLOGY_ATTRIBUTES[b1]
+    b_attr2 = NUMEROLOGY_ATTRIBUTES[b2]
+    b_is_friend = (b2 in b_attr1['friendly']) or (b1 in b_attr2['friendly'])
+    b_is_enemy = (b2 in b_attr1['enemy']) or (b1 in b_attr2['enemy'])
+    
+    score = 70
+    if m_is_friend: score += 15
+    elif m_is_enemy: score -= 15
+    
+    if b_is_friend: score += 15
+    elif b_is_enemy: score -= 15
+    
+    score = max(42, min(97, score))
+    
+    if score >= 85:
+        verdict_mr = "अतिउत्कृष्ट जुळवणी! वैचारिक आणि मानसिक समजूतदारपणा अत्यंत उत्तम राहील."
+        verdict_hi = "अत्यंत उत्तम मिलान! मानसिक और वैचारिक तालमेल बहुत बढ़िया रहेगा।"
+        verdict_en = "Excellent harmony! High mutual understanding, warmth, and shared goals."
+    elif score >= 70:
+        verdict_mr = "उत्तम जुळवणी! संवाद आणि सहकार्याने नाते दीर्घकाळ आनंदी व समृद्ध राहील."
+        verdict_hi = "उत्तम मिलान! अच्छे संवाद और सहयोग से संबंध हमेशा मधुर रहेगा।"
+        verdict_en = "Strong compatibility! Open communication and mutual respect will nurture the bond."
+    else:
+        verdict_mr = "मध्यम जुळवणी. दोघांनीही एकमेकांच्या मतांचा आदर करणे आणि संयम ठेवणे गरजेचे आहे."
+        verdict_hi = "मध्यम मिलान। दोनों को एक-दूसरे के विचारों का सम्मान और धैर्य रखना चाहिए।"
+        verdict_en = "Moderate compatibility. Requires patience, empathy, and active listening to balance differences."
+        
+    return {
+        'partner1': num1,
+        'partner2': num2,
+        'compatibilityScore': score,
+        'verdictMr': verdict_mr,
+        'verdictHi': verdict_hi,
+        'verdictEn': verdict_en,
+        'mentalHarmony': "मित्र अंक (Friendly)" if m_is_friend else ("शत्रू अंक (Cautious)" if m_is_enemy else "तटस्थ (Neutral)"),
+        'destinyHarmony': "मित्र अंक (Friendly)" if b_is_friend else ("शत्रू अंक (Cautious)" if b_is_enemy else "तटस्थ (Neutral)")
+    }
+
+# ==============================================================================
+# ASHTA KOOTA 36 GUNA MILAN ENGINE
+# ==============================================================================
+
+NAK_ANIMALS = [
+    'Horse', 'Elephant', 'Sheep', 'Serpent', 'Serpent', 'Dog', 'Cat', 'Sheep', 'Cat',
+    'Rat', 'Rat', 'Cow', 'Buffalo', 'Tiger', 'Buffalo', 'Tiger', 'Deer', 'Deer',
+    'Dog', 'Monkey', 'Mongoose', 'Monkey', 'Lion', 'Horse', 'Lion', 'Cow', 'Elephant'
+]
+
+YONI_NAMES_MR = {
+    'Horse': 'अश्व (Horse)', 'Elephant': 'हत्ती (Elephant)', 'Sheep': 'मेंढा (Sheep)',
+    'Serpent': 'सर्प (Serpent)', 'Dog': 'श्वान (Dog)', 'Cat': 'मांजर (Cat)',
+    'Rat': 'उंदीर (Rat)', 'Cow': 'गाय (Cow)', 'Buffalo': 'म्हैस (Buffalo)',
+    'Tiger': 'वाघ (Tiger)', 'Deer': 'हरीण (Deer)', 'Monkey': 'वानर (Monkey)',
+    'Mongoose': 'मुंगूस (Mongoose)', 'Lion': 'सिंह (Lion)'
+}
+
+BITTER_ENEMIES_YONI = {
+    frozenset(['Horse', 'Buffalo']),
+    frozenset(['Elephant', 'Lion']),
+    frozenset(['Sheep', 'Monkey']),
+    frozenset(['Serpent', 'Mongoose']),
+    frozenset(['Dog', 'Deer']),
+    frozenset(['Cat', 'Rat']),
+    frozenset(['Cow', 'Tiger'])
+}
+
+DEVA_NAK = {0, 4, 6, 7, 12, 14, 16, 21, 26}
+MANUSHYA_NAK = {1, 3, 5, 10, 11, 19, 20, 24, 25}
+RAKSHASA_NAK = {2, 8, 9, 13, 15, 17, 18, 22, 23}
+
+PLANETARY_FRIENDS = {
+    'Sun': {'friends': {'Moon', 'Mars', 'Jupiter'}, 'neutral': {'Mercury'}, 'enemies': {'Venus', 'Saturn'}},
+    'Moon': {'friends': {'Sun', 'Mercury'}, 'neutral': {'Mars', 'Jupiter', 'Venus', 'Saturn'}, 'enemies': set()},
+    'Mars': {'friends': {'Sun', 'Moon', 'Jupiter'}, 'neutral': {'Venus', 'Saturn'}, 'enemies': {'Mercury'}},
+    'Mercury': {'friends': {'Sun', 'Venus'}, 'neutral': {'Mars', 'Jupiter', 'Saturn'}, 'enemies': {'Moon'}},
+    'Jupiter': {'friends': {'Sun', 'Moon', 'Mars'}, 'neutral': {'Saturn'}, 'enemies': {'Mercury', 'Venus'}},
+    'Venus': {'friends': {'Mercury', 'Saturn'}, 'neutral': {'Mars', 'Jupiter'}, 'enemies': {'Sun', 'Moon'}},
+    'Saturn': {'friends': {'Mercury', 'Venus'}, 'neutral': {'Jupiter'}, 'enemies': {'Sun', 'Moon', 'Mars'}}
+}
+
+ZODIAC_NAMES_MR_MATCH = [
+    '', 'मेष (Aries)', 'वृषभ (Taurus)', 'मिथुन (Gemini)', 'कर्क (Cancer)',
+    'सिंह (Leo)', 'कन्या (Virgo)', 'तूळ (Libra)', 'वृश्चिक (Scorpio)',
+    'धनु (Sagittarius)', 'मकर (Capricorn)', 'कुंभ (Aquarius)', 'मीन (Pisces)'
+]
+
+def get_varna(sign_num):
+    if sign_num in [4, 8, 12]: return (4, 'ब्राह्मण (Brahmin)')
+    if sign_num in [1, 5, 9]: return (3, 'क्षत्रिय (Kshatriya)')
+    if sign_num in [2, 6, 10]: return (2, 'वैश्य (Vaishya)')
+    return (1, 'शूद्र (Shudra)')
+
+def get_vashya(sign_num, deg_in_sign):
+    if sign_num in [1, 2]: return 'Chatushpada'
+    if sign_num in [3, 6, 7, 11]: return 'Manava'
+    if sign_num == 4: return 'Jalachara'
+    if sign_num == 5: return 'Vanchara'
+    if sign_num == 8: return 'Keeta'
+    if sign_num == 9: return 'Manava' if deg_in_sign < 15.0 else 'Chatushpada'
+    if sign_num == 10: return 'Chatushpada' if deg_in_sign < 15.0 else 'Jalachara'
+    if sign_num == 12: return 'Jalachara'
+    return 'Manava'
+
+def get_gana(nak_idx):
+    if nak_idx in DEVA_NAK: return (1, 'देव गण (Deva)')
+    if nak_idx in MANUSHYA_NAK: return (2, 'मनुष्य गण (Manushya)')
+    return (3, 'राक्षस गण (Rakshasa)')
+
+def get_nadi(nak_idx):
+    mod = nak_idx % 3
+    if mod == 0: return (1, 'आद्य नाडी (Adi)')
+    if mod == 1: return (2, 'मध्य नाडी (Madhya)')
+    return (3, 'अंत्य नाडी (Antya)')
+
+def get_graha_maitri_score(lord1, lord2):
+    if lord1 == lord2: return 5.0
+    f1 = lord2 in PLANETARY_FRIENDS[lord1]['friends']
+    e1 = lord2 in PLANETARY_FRIENDS[lord1]['enemies']
+    f2 = lord1 in PLANETARY_FRIENDS[lord2]['friends']
+    e2 = lord1 in PLANETARY_FRIENDS[lord2]['enemies']
+    
+    if f1 and f2: return 5.0
+    if (f1 and not e2) or (f2 and not e1): return 4.0
+    if not e1 and not e2: return 3.0
+    if (f1 and e2) or (f2 and e1): return 1.0
+    return 0.0
+
+def match_kundalis(boy_moon_sign, boy_moon_deg, boy_nak_idx, boy_pada, boy_has_mangal,
+                   girl_moon_sign, girl_moon_deg, girl_nak_idx, girl_pada, girl_has_mangal):
+    kootas = []
+    total_score = 0.0
+    
+    # 1. Varna (1 point)
+    boy_v_num, boy_v_name = get_varna(boy_moon_sign)
+    girl_v_num, girl_v_name = get_varna(girl_moon_sign)
+    varna_score = 1.0 if boy_v_num >= girl_v_num else 0.0
+    total_score += varna_score
+    kootas.append({
+        'name': 'वर्ण (Varna)', 'max': 1, 'score': varna_score,
+        'boy': boy_v_name, 'girl': girl_v_name,
+        'descMr': 'कार्य आणि प्रवृत्तीचे सामंजस्य दर्शवते.',
+        'descHi': 'कार्य और स्वभाव का सामंजस्य दर्शाता है।',
+        'descEn': 'Represents work and ego harmony.'
+    })
+    
+    # 2. Vashya (2 points)
+    boy_vash = get_vashya(boy_moon_sign, boy_moon_deg)
+    girl_vash = get_vashya(girl_moon_sign, girl_moon_deg)
+    vashya_score = 2.0 if boy_vash == girl_vash else (1.0 if {boy_vash, girl_vash} in [{ 'Manava', 'Chatushpada' }, { 'Jalachara', 'Chatushpada' }] else 0.5)
+    total_score += vashya_score
+    kootas.append({
+        'name': 'वश्य (Vashya)', 'max': 2, 'score': vashya_score,
+        'boy': boy_vash, 'girl': girl_vash,
+        'descMr': 'परस्पर आकर्षण आणि प्रभावाचे नियंत्रण.',
+        'descHi': 'परस्पर आकर्षण और नियंत्रण क्षमता।',
+        'descEn': 'Mutual control and magnetic attraction.'
+    })
+    
+    # 3. Tara (3 points)
+    tara_b2g = ((girl_nak_idx - boy_nak_idx + 27) % 9) + 1
+    tara_g2b = ((boy_nak_idx - girl_nak_idx + 27) % 9) + 1
+    b2g_bad = tara_b2g in [3, 5, 7]
+    g2b_bad = tara_g2b in [3, 5, 7]
+    tara_score = 3.0 if (not b2g_bad and not g2b_bad) else (1.5 if (not b2g_bad or not g2b_bad) else 0.0)
+    total_score += tara_score
+    kootas.append({
+        'name': 'तारा (Tara)', 'max': 3, 'score': tara_score,
+        'boy': f"तारा {tara_g2b}", 'girl': f"तारा {tara_b2g}",
+        'descMr': 'भाग्य आणि आरोग्याची अनुकूलता दर्शवते.',
+        'descHi': 'भाग्य और स्वास्थ्य की अनुकूलता दर्शाता है।',
+        'descEn': 'Destiny, well-being, and longevity balance.'
+    })
+    
+    # 4. Yoni (4 points)
+    boy_animal = NAK_ANIMALS[boy_nak_idx]
+    girl_animal = NAK_ANIMALS[girl_nak_idx]
+    is_yoni_enemy = frozenset([boy_animal, girl_animal]) in BITTER_ENEMIES_YONI
+    yoni_score = 4.0 if boy_animal == girl_animal else (0.0 if is_yoni_enemy else 2.0)
+    total_score += yoni_score
+    kootas.append({
+        'name': 'योनी (Yoni)', 'max': 4, 'score': yoni_score,
+        'boy': YONI_NAMES_MR[boy_animal], 'girl': YONI_NAMES_MR[girl_animal],
+        'descMr': 'शारीरिक आणि जैविक सुसंगतता.',
+        'descHi': 'शारीरिक और प्राकृतिक अनुकूलता।',
+        'descEn': 'Intimate harmony and biological synergy.'
+    })
+    
+    # 5. Graha Maitri (5 points)
+    lord_boy = SIGN_LORDS[boy_moon_sign]
+    lord_girl = SIGN_LORDS[girl_moon_sign]
+    maitri_score = get_graha_maitri_score(lord_boy, lord_girl)
+    total_score += maitri_score
+    kootas.append({
+        'name': 'ग्रहमैत्री (Graha Maitri)', 'max': 5, 'score': maitri_score,
+        'boy': lord_boy, 'girl': lord_girl,
+        'descMr': 'मानसिक मैत्री आणि विचारांचे एकमत.',
+        'descHi': 'मानसिक मित्रता और सोच का तालमेल।',
+        'descEn': 'Psychological friendship and intellectual accord.'
+    })
+    
+    # 6. Gana (6 points)
+    boy_g_code, boy_g_name = get_gana(boy_nak_idx)
+    girl_g_code, girl_g_name = get_gana(girl_nak_idx)
+    if boy_g_code == girl_g_code: gana_score = 6.0
+    elif (boy_g_code == 1 and girl_g_code == 2): gana_score = 6.0
+    elif (boy_g_code == 2 and girl_g_code == 1): gana_score = 5.0
+    elif (boy_g_code == 3 and girl_g_code == 3): gana_score = 6.0
+    else: gana_score = 0.0
+    total_score += gana_score
+    kootas.append({
+        'name': 'गण (Gana)', 'max': 6, 'score': gana_score,
+        'boy': boy_g_name, 'girl': girl_g_name,
+        'descMr': 'स्वभाव, वागणूक आणि परस्पर आदर.',
+        'descHi': 'स्वभाव, व्यवहार और जीवनशैली की समानता।',
+        'descEn': 'Temperamental alignment and daily behavior.'
+    })
+    
+    # 7. Bhakoot (7 points)
+    dist = ((girl_moon_sign - boy_moon_sign + 12) % 12) + 1
+    has_bhakoot_dosha = dist in [2, 12, 6, 8, 5, 9]
+    parihara_bhakoot = (lord_boy == lord_girl) or (lord_girl in PLANETARY_FRIENDS[lord_boy]['friends'] and lord_boy in PLANETARY_FRIENDS[lord_girl]['friends'])
+    bhakoot_score = 7.0 if (not has_bhakoot_dosha or parihara_bhakoot) else 0.0
+    total_score += bhakoot_score
+    kootas.append({
+        'name': 'भकूट (Bhakoot)', 'max': 7, 'score': bhakoot_score,
+        'boy': ZODIAC_NAMES_MR_MATCH[boy_moon_sign], 'girl': ZODIAC_NAMES_MR_MATCH[girl_moon_sign],
+        'descMr': 'दोष परिहार लागू' if (has_bhakoot_dosha and parihara_bhakoot) else ('कुटुंब सुख आणि आर्थिक समृद्धी.'),
+        'descHi': 'दोष परिहार लागू' if (has_bhakoot_dosha and parihara_bhakoot) else ('पारिवारिक सुख और आर्थिक संपन्नता।'),
+        'descEn': 'Family happiness and financial prosperity.'
+    })
+    
+    # 8. Nadi (8 points)
+    boy_n_code, boy_n_name = get_nadi(boy_nak_idx)
+    girl_n_code, girl_n_name = get_nadi(girl_nak_idx)
+    has_nadi_dosha = (boy_n_code == girl_n_code)
+    parihara_nadi = has_nadi_dosha and (boy_nak_idx != girl_nak_idx or boy_pada != girl_pada)
+    nadi_score = 8.0 if not has_nadi_dosha else (8.0 if parihara_nadi else 0.0)
+    total_score += nadi_score
+    kootas.append({
+        'name': 'नाडी (Nadi)', 'max': 8, 'score': nadi_score,
+        'boy': boy_n_name, 'girl': girl_n_name,
+        'descMr': 'नाडी दोष परिहार' if (has_nadi_dosha and parihara_nadi) else ('वंशवृद्धी, आरोग्य आणि शारीरिक सुदृढता.'),
+        'descHi': 'नाडी दोष परिहार' if (has_nadi_dosha and parihara_nadi) else ('संतान सुख, स्वास्थ्य और दीर्घायु।'),
+        'descEn': 'Genetic compatibility, progeny, and physiological balance.'
+    })
+    
+    # Manglik comparison
+    mangal_status_mr = (
+        'दोघांनाही मंगळ दोष असल्याने परिहार झाला आहे (शुभ).' if (boy_has_mangal and girl_has_mangal)
+        else 'दोघांपैकी कोणालाही मंगळ दोष नाही (अतिशुभ).' if (not boy_has_mangal and not girl_has_mangal)
+        else 'एका पत्रिकेत मंगळ प्रभाव आहे, लग्नापूर्वी योग्य सल्ला घ्यावा.'
+    )
+    mangal_status_hi = (
+        'दोनों मांगलिक होने से दोष शांत हो गया है (शुभ)।' if (boy_has_mangal and girl_has_mangal)
+        else 'दोनों में से कोई भी मांगलिक नहीं है (अतिशुभ)।' if (not boy_has_mangal and not girl_has_mangal)
+        else 'एक पत्रिका में मंगल प्रभाव है, विवाह से पूर्व परामर्श लें।'
+    )
+    mangal_status_en = (
+        'Both have Mars alignment, resulting in natural cancellation (Favorable).' if (boy_has_mangal and girl_has_mangal)
+        else 'Neither partner has Manglik Dosha (Highly Auspicious).' if (not boy_has_mangal and not girl_has_mangal)
+        else 'One partner has Mars alignment; astrological consultation recommended.'
+    )
+    
+    if total_score >= 28:
+        verdict_mr = "अतिउत्कृष्ट गुणमिलन! विवाह आणि संसारासाठी अत्यंत शुभ योग."
+        verdict_hi = "अतिउत्कृष्ट गुण मिलान! वैवाहिक जीवन अत्यंत सुखद और समृद्ध रहेगा।"
+        verdict_en = "Outstanding match! Highly auspicious for a joyful and prosperous union."
+    elif total_score >= 21:
+        verdict_mr = "उत्तम गुणमिलन! वैवाहिक सौख्य, प्रेम आणि आर्थिक प्रगती लाभेल."
+        verdict_hi = "उत्तम गुण मिलान! दांपत्य जीवन सुखमय और प्रेमपूर्ण रहेगा।"
+        verdict_en = "Very good match! Strong emotional bond and mutual prosperity."
+    elif total_score >= 18:
+        verdict_mr = "मध्यम व मान्य गुणमिलन. समजूतदारपणा आणि सहकार्याने संसार चांगला चालेल."
+        verdict_hi = "मध्यम और मान्य मिलान। आपसी समझदारी से वैवाहिक जीवन सुखद रहेगा।"
+        verdict_en = "Acceptable match. Mutual understanding will ensure a peaceful relationship."
+    else:
+        verdict_mr = "गुण १८ पेक्षा कमी आहेत. विचारपूर्वक आणि ज्योतिषांच्या सल्ल्याने निर्णय घ्यावा."
+        verdict_hi = "गुण १८ से कम हैं। सोच-समझकर और ज्योतिषीय सलाह से निर्णय लें।"
+        verdict_en = "Score below 18 points. Careful consideration and remedies advised."
+        
+    return {
+        'totalScore': total_score,
+        'maxScore': 36,
+        'verdictMr': verdict_mr,
+        'verdictHi': verdict_hi,
+        'verdictEn': verdict_en,
+        'kootas': kootas,
+        'mangalAnalysis': {
+            'boyHasMangal': boy_has_mangal,
+            'girlHasMangal': girl_has_mangal,
+            'statusMr': mangal_status_mr,
+            'statusHi': mangal_status_hi,
+            'statusEn': mangal_status_en
+        }
+    }
+
+def calculate_kundali_match_full(boy_data, girl_data):
+    boy_chart = calculate_birth_chart(
+        boy_data['dob'], boy_data['tob'],
+        float(boy_data.get('lat', 18.5204)), float(boy_data.get('lon', 73.8567)),
+        float(boy_data.get('tz', 5.5))
+    )
+    girl_chart = calculate_birth_chart(
+        girl_data['dob'], girl_data['tob'],
+        float(girl_data.get('lat', 18.5204)), float(girl_data.get('lon', 73.8567)),
+        float(girl_data.get('tz', 5.5))
+    )
+    
+    boy_moon = boy_chart['planets']['Moon']
+    girl_moon = girl_chart['planets']['Moon']
+    
+    boy_nak_idx = get_nakshatra_info(boy_moon['longitude'])['index']
+    girl_nak_idx = get_nakshatra_info(girl_moon['longitude'])['index']
+    
+    boy_has_mangal = boy_chart['marriageAnalysis']['hasMangalDosha']
+    girl_has_mangal = girl_chart['marriageAnalysis']['hasMangalDosha']
+    
+    match_result = match_kundalis(
+        boy_moon['signNumber'], boy_moon['longitude'] % 30.0, boy_nak_idx, boy_moon['pada'], boy_has_mangal,
+        girl_moon['signNumber'], girl_moon['longitude'] % 30.0, girl_nak_idx, girl_moon['pada'], girl_has_mangal
+    )
+    
+    return {
+        'boy': {
+            'name': boy_data.get('name', 'वर (Groom)'),
+            'moonSign': boy_moon['sign'],
+            'nakshatra': boy_moon['nakshatra'],
+            'pada': boy_moon['pada'],
+            'hasMangal': boy_has_mangal
+        },
+        'girl': {
+            'name': girl_data.get('name', 'वधू (Bride)'),
+            'moonSign': girl_moon['sign'],
+            'nakshatra': girl_moon['nakshatra'],
+            'pada': girl_moon['pada'],
+            'hasMangal': girl_has_mangal
+        },
+        'match': match_result
+    }
+
 def main():
     try:
         raw_input = None
@@ -873,9 +1435,25 @@ def main():
             natal_data = payload.get('natalData', {})
             result = calculate_daily_gochar(natal_data)
             print(json.dumps(result, ensure_ascii=False))
+        elif action == 'numerology':
+            name = payload.get('name', '')
+            dob = payload['dob']
+            result = calculate_numerology(name, dob)
+            print(json.dumps(result, ensure_ascii=False))
+        elif action == 'couple_numerology':
+            p1 = payload['partner1']
+            p2 = payload['partner2']
+            result = calculate_couple_numerology(p1, p2)
+            print(json.dumps(result, ensure_ascii=False))
+        elif action == 'kundali_match':
+            boy = payload['boy']
+            girl = payload['girl']
+            result = calculate_kundali_match_full(boy, girl)
+            print(json.dumps(result, ensure_ascii=False))
         else:
             print(json.dumps({'error': f"Unknown action: {action}"}))
             sys.exit(1)
+
             
     except Exception as e:
         import traceback

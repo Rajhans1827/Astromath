@@ -81,6 +81,33 @@ export class PythonEphemerisService {
     };
     return await runPythonEngine(payload);
   }
+
+  async calculateNumerology({ name, dob }) {
+    const payload = {
+      action: 'numerology',
+      name: name || '',
+      dob,
+    };
+    return await runPythonEngine(payload);
+  }
+
+  async calculateCoupleNumerology({ partner1, partner2 }) {
+    const payload = {
+      action: 'couple_numerology',
+      partner1,
+      partner2,
+    };
+    return await runPythonEngine(payload);
+  }
+
+  async calculateKundaliMatch({ boy, girl }) {
+    const payload = {
+      action: 'kundali_match',
+      boy,
+      girl,
+    };
+    return await runPythonEngine(payload);
+  }
 }
 
 export const pythonEphemerisService = new PythonEphemerisService();

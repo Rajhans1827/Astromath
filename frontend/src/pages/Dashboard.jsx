@@ -2,14 +2,28 @@ import { useState, useEffect } from 'react';
 import {
   Compass, LayoutDashboard, Sun, Moon, Briefcase, Heart, Calendar,
   MessageSquare, Sparkles, User, RefreshCw, LogOut, CheckCircle2, AlertTriangle, ArrowLeft, Settings2,
-  Orbit, ShieldAlert, Activity, Eye
+  Orbit, Activity, Hash
 } from 'lucide-react';
 import KundaliChart from '../components/KundaliChart';
 import DashaTimeline from '../components/DashaTimeline';
 import AIChatbot from '../components/AIChatbot';
 import BirthCoordinatesModal from '../components/BirthCoordinatesModal';
+import PersonalNumerology from '../components/PersonalNumerology';
+import CoupleKundaliMatch from '../components/CoupleKundaliMatch';
+import CoupleNumerology from '../components/CoupleNumerology';
+import { translations } from '../data/translations';
 
 export default function Dashboard({ user, initialBirthData, onLogout, onReturnHome }) {
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem('astromath_lang') || 'mr';
+  });
+  const t = translations[lang] || translations.mr;
+
+  const handleLanguageChange = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem('astromath_lang', newLang);
+  };
+
   const [activeTab, setActiveTab] = useState('overview');
   const [showMobileParams, setShowMobileParams] = useState(false);
   const [birthModalOpen, setBirthModalOpen] = useState(false);
@@ -47,7 +61,6 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
             setBirthData(initialBirthData);
             fetchChart(initialBirthData);
           } else {
-            // Active user has no profile saved in SQLite DB yet
             setBirthData(null);
             setChartData(null);
             setBirthModalOpen(true);
@@ -91,7 +104,6 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
       setChartData(data.chart);
       setBirthData(data.profile);
-
       fetchDaily(data.profile);
     } catch (err) {
       console.error('Error fetching chart:', err);
@@ -127,6 +139,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           domain: domain,
           chartData: chartData,
           dailyData: dailyData,
+          lang: lang,
         }),
       });
       const data = await res.json();
@@ -177,28 +190,31 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
   }
 
   const tabs = [
-    { id: 'overview', label: 'Matrix', icon: LayoutDashboard },
-    { id: 'kundali', label: 'Harmonics', icon: Compass },
-    { id: 'daily', label: 'Transits', icon: Sun },
-    { id: 'career', label: 'Vocation', icon: Briefcase },
-    { id: 'marriage', label: 'Union', icon: Heart },
-    { id: 'dasha', label: 'Cycles', icon: Calendar },
-    { id: 'chat', label: 'Oracle', icon: MessageSquare },
+    { id: 'overview', label: t.tabs.overview, icon: LayoutDashboard },
+    { id: 'kundali', label: t.tabs.kundali, icon: Compass },
+    { id: 'daily', label: t.tabs.daily, icon: Sun },
+    { id: 'numerology', label: t.tabs.numerology, icon: Hash },
+    { id: 'couple_kundali', label: t.tabs.couple_kundali, icon: Heart },
+    { id: 'couple_numerology', label: t.tabs.couple_numerology, icon: Sparkles },
+    { id: 'career', label: t.tabs.career, icon: Briefcase },
+    { id: 'marriage', label: t.tabs.marriage, icon: Moon },
+    { id: 'dasha', label: t.tabs.dasha, icon: Calendar },
+    { id: 'chat', label: t.tabs.chat, icon: MessageSquare },
   ];
 
   return (
     <div className="relative min-h-screen flex flex-col text-slate-100">
       {/* Top Floating Glass Header */}
-      <header className="sticky top-0 z-40 px-3 sm:px-8 py-2.5 sm:py-3.5 bg-black/50 backdrop-blur-2xl border-b border-white/10 flex items-center justify-between">
+      <header className="sticky top-0 z-40 px-3 sm:px-8 py-2.5 sm:py-3.5 bg-black/60 backdrop-blur-2xl border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
           {activeTab !== 'overview' && (
             <button
               onClick={() => setActiveTab('overview')}
               className="p-1.5 sm:p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5"
-              title="Back to Overview Matrix"
+              title={t.header.backToOverview}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs text-slate-300 pr-1">Overview</span>
+              <span className="hidden sm:inline text-xs text-slate-300 pr-1">{t.header.backToOverview}</span>
             </button>
           )}
           <div className="flex items-center gap-2 sm:gap-2.5">
@@ -209,17 +225,39 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               AstroMath
             </span>
           </div>
-          <span className="hidden sm:inline-block text-[11px] px-3 py-0.5 rounded-full bg-white/[0.05] text-slate-300 border border-white/10 font-mono">
-            {chartData ? `${chartData.lagna?.sign} Ascendant` : 'Aligning...'}
+          <span className="hidden lg:inline-block text-[11px] px-3 py-0.5 rounded-full bg-white/[0.05] text-slate-300 border border-white/10 font-mono">
+            {chartData ? `${chartData.lagna?.sign} ${t.header.ascendant}` : 'Aligning...'}
           </span>
         </div>
 
+        {/* Right Header: Language Switcher, User Details, Coordinates */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Trilingual Switcher (मराठी / हिंदी / English) */}
+          <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-full bg-white/[0.06] border border-white/10 text-xs">
+            {[
+              { id: 'mr', label: 'मराठी' },
+              { id: 'hi', label: 'हिंदी' },
+              { id: 'en', label: 'EN' },
+            ].map((l) => (
+              <button
+                key={l.id}
+                onClick={() => handleLanguageChange(l.id)}
+                className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all ${
+                  lang === l.id
+                    ? 'bg-white text-slate-950 font-bold shadow'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
           {/* Mobile Parameters Edit Button */}
           <button
             onClick={() => setShowMobileParams(!showMobileParams)}
             className="md:hidden px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-xs text-slate-200 flex items-center gap-1.5 transition-colors"
-            title="Edit Birth Coordinates"
+            title={t.header.editCoordinates}
           >
             <Settings2 className="w-3.5 h-3.5 text-amber-300" />
             <span className="text-[11px] font-medium">{birthData.name?.split(' ')[0]}</span>
@@ -235,17 +273,17 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           <button
             onClick={() => setBirthModalOpen(true)}
             className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs text-slate-200 transition-colors"
-            title="Edit Birth Details"
+            title={t.header.editCoordinates}
           >
             <Settings2 className="w-3.5 h-3.5 text-slate-400" />
-            <span>Coordinates</span>
+            <span>{t.header.coordinatesTitle}</span>
           </button>
 
           {onLogout && (
             <button
               onClick={onLogout}
               className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-              title="Sign Out"
+              title={t.header.signOut}
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -258,7 +296,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
         <div className="md:hidden p-4 bg-[#05070D]/95 backdrop-blur-3xl border-b border-white/15 animate-fadeIn">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">
-              Edit Birth Coordinates (Database-Driven)
+              {t.header.editCoordinates}
             </h4>
             <button
               onClick={() => setShowMobileParams(false)}
@@ -269,7 +307,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           </div>
           <form onSubmit={handleUpdateBirthData} className="space-y-2.5 text-xs">
             <div>
-              <label className="text-slate-400 uppercase tracking-wider text-[9px]">Full Name</label>
+              <label className="text-slate-400 uppercase tracking-wider text-[9px]">पूर्ण नाव (Full Name)</label>
               <input
                 type="text"
                 required
@@ -280,7 +318,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-slate-400 uppercase tracking-wider text-[9px]">Birth Date</label>
+                <label className="text-slate-400 uppercase tracking-wider text-[9px]">जन्म तारीख (DOB)</label>
                 <input
                   type="date"
                   required
@@ -290,7 +328,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 />
               </div>
               <div>
-                <label className="text-slate-400 uppercase tracking-wider text-[9px]">Birth Time</label>
+                <label className="text-slate-400 uppercase tracking-wider text-[9px]">जन्म वेळ (TOB)</label>
                 <input
                   type="time"
                   required
@@ -301,7 +339,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               </div>
             </div>
             <div>
-              <label className="text-slate-400 uppercase tracking-wider text-[9px]">Birth City / Location</label>
+              <label className="text-slate-400 uppercase tracking-wider text-[9px]">जन्म ठिकाण (City)</label>
               <input
                 type="text"
                 required
@@ -314,7 +352,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               type="submit"
               className="w-full py-2.5 rounded-xl bg-white text-slate-950 font-bold text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors mt-1"
             >
-              Recalculate &amp; Save to DB
+              जतन करा (Save & Recalculate)
             </button>
           </form>
         </div>
@@ -350,7 +388,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
           <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                Active Profile
+                {t.header.coordinatesTitle}
               </h4>
               <button
                 onClick={() => fetchChart()}
@@ -363,7 +401,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
             <form onSubmit={handleUpdateBirthData} className="space-y-3 text-xs">
               <div>
-                <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Name</label>
+                <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">नाव (Name)</label>
                 <input
                   type="text"
                   required
@@ -374,7 +412,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Date</label>
+                  <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">तारीख (Date)</label>
                   <input
                     type="date"
                     required
@@ -384,7 +422,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                   />
                 </div>
                 <div>
-                  <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Time</label>
+                  <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">वेळ (Time)</label>
                   <input
                     type="time"
                     required
@@ -395,7 +433,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 </div>
               </div>
               <div>
-                <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">Location</label>
+                <label className="text-slate-400 uppercase tracking-wider text-[9.5px]">ठिकाण (City)</label>
                 <input
                   type="text"
                   required
@@ -408,7 +446,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 type="submit"
                 className="w-full py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/15 font-semibold text-[11px] uppercase tracking-wider transition-colors mt-2"
               >
-                Save &amp; Recalculate
+                जतन करा (Save)
               </button>
             </form>
           </div>
@@ -422,7 +460,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs tracking-wide transition-all ${
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs tracking-wide transition-all ${
                     isActive
                       ? 'bg-white text-slate-950 font-bold shadow-lg'
                       : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
@@ -442,32 +480,32 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
             <div className="h-96 flex flex-col items-center justify-center text-center p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl">
               <Compass className="w-10 h-10 text-white animate-spin-slow mb-4" />
               <h3 className="text-lg font-bold text-white tracking-tight">
-                Aligning Celestial Coordinates...
+                कुंडली तयार होत आहे...
               </h3>
               <p className="text-xs text-slate-400 mt-1 font-light">
-                Computing harmonic divisional matrices and planetary periods from your verified database record.
+                पायथन खगोलीय इंजिनद्वारे सर्व ग्रहांची अचूक स्थिती काढली जात आहे.
               </p>
             </div>
           ) : !chartData ? (
             <div className="p-8 text-center text-slate-400 bg-white/[0.03] rounded-3xl border border-white/10">
-              <p>Unable to load coordinates.</p>
+              <p>जन्म माहिती लोड होऊ शकली नाही.</p>
               <button
                 onClick={() => setBirthModalOpen(true)}
                 className="mt-3 px-4 py-2 rounded-full bg-white text-slate-950 font-bold text-xs"
               >
-                Enter Coordinates
+                {t.header.editCoordinates}
               </button>
             </div>
           ) : (
             <>
-              {/* TAB 1: OVERVIEW MATRIX */}
+              {/* TAB 1: OVERVIEW SUMMARY */}
               {activeTab === 'overview' && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-fadeIn">
                   {/* Summary Metric Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                     <div className="p-4 sm:p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl">
                       <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
-                        Ascendant (Lagna)
+                        {t.overview.lagnaCard}
                       </span>
                       <div className="text-lg sm:text-xl font-bold text-white font-sans mt-1">
                         {chartData.lagna?.sign}
@@ -479,7 +517,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
                     <div className="p-4 sm:p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl">
                       <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
-                        Moon Sign (Chandra)
+                        {t.overview.moonCard}
                       </span>
                       <div className="text-lg sm:text-xl font-bold text-white font-sans mt-1">
                         {chartData.planets?.Moon?.sign}
@@ -491,7 +529,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
                     <div className="p-4 sm:p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl">
                       <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
-                        Sun Sign (Surya)
+                        {t.overview.sunCard}
                       </span>
                       <div className="text-lg sm:text-xl font-bold text-white font-sans mt-1">
                         {chartData.planets?.Sun?.sign}
@@ -503,13 +541,13 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
                     <div className="p-4 sm:p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl">
                       <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
-                        Active Period
+                        {t.overview.dashaCard}
                       </span>
                       <div className="text-lg sm:text-xl font-bold text-white font-sans mt-1">
                         {chartData.currentDasha?.maha} - {chartData.currentDasha?.antar}
                       </div>
                       <span className="text-[11px] sm:text-xs text-slate-300 font-mono mt-0.5 block">
-                        Until {chartData.currentDasha?.until}
+                        {t.overview.until} {chartData.currentDasha?.until}
                       </span>
                     </div>
                   </div>
@@ -518,10 +556,10 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                   <div className="p-4 sm:p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 overflow-hidden shadow-2xl">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-4 sm:mb-5">
                       <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                        Planetary Coordinates &amp; Dignities
+                        {t.overview.planetTableTitle}
                       </h3>
                       <span className="text-[11px] sm:text-xs font-mono text-slate-400">
-                        Chitrapaksha Offset: {chartData.ayanamsa?.toFixed(2)}°
+                        {t.overview.ayanamsaOffset}: {chartData.ayanamsa?.toFixed(2)}°
                       </span>
                     </div>
 
@@ -529,32 +567,34 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       <table className="w-full text-left text-xs text-slate-300 min-w-[500px]">
                         <thead className="bg-white/[0.02] text-slate-400 uppercase text-[9.5px] sm:text-[10px] tracking-wider border-b border-white/10">
                           <tr>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">Body</th>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">Sign</th>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">Longitude</th>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">House</th>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">Nakshatra</th>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">Pada</th>
-                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">Motion</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colPlanet}</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colSign}</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colDeg}</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colHouse}</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colNak}</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colPada}</th>
+                            <th className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold">{t.overview.colSpeed}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5 font-medium">
                           {Object.entries(chartData.planets || {}).map(([name, p]) => (
                             <tr key={name} className="hover:bg-white/[0.02] transition-colors">
-                              <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold text-white">{name}</td>
+                              <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold text-white">
+                                {p.nameMr || name} <span className="text-slate-400 font-normal">({name})</span>
+                              </td>
                               <td className="py-2.5 sm:py-3 px-3 sm:px-4">{p.sign}</td>
                               <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-white">{p.degreeFormatted}</td>
-                              <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono">House {p.house}</td>
+                              <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono">{t.overview.housePrefix} {p.house}</td>
                               <td className="py-2.5 sm:py-3 px-3 sm:px-4">{p.nakshatra}</td>
                               <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono">{p.pada}</td>
                               <td className="py-2.5 sm:py-3 px-3 sm:px-4">
                                 {p.isRetrograde ? (
                                   <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20 text-[9.5px]">
-                                    Retro (℞)
+                                    {t.overview.retro}
                                   </span>
                                 ) : (
                                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 text-[9.5px]">
-                                    Direct
+                                    {t.overview.direct}
                                   </span>
                                 )}
                               </td>
@@ -567,15 +607,15 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 </div>
               )}
 
-              {/* TAB 2: HARMONIC CHARTS (Large Scale Centerpiece) */}
+              {/* TAB 2: KUNDALI CHARTS */}
               {activeTab === 'kundali' && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-fadeIn">
                   {/* Selector Pills */}
                   <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/10 w-fit overflow-x-auto">
                     {[
-                      { id: 'D1', label: 'Natal Wheel (D1)' },
-                      { id: 'D9', label: 'Navamsha (D9)' },
-                      { id: 'D10', label: 'Dashamsha (D10)' },
+                      { id: 'D1', label: t.kundali.d1Wheel },
+                      { id: 'D9', label: t.kundali.d9Wheel },
+                      { id: 'D10', label: t.kundali.d10Wheel },
                     ].map((chart) => (
                       <button
                         key={chart.id}
@@ -591,14 +631,20 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                     ))}
                   </div>
 
-                  {/* Large Centerpiece Layout for the Kundali Chart */}
+                  {/* Centerpiece Layout for the Kundali Chart */}
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 sm:gap-8 items-start">
                     <div className="xl:col-span-7 flex justify-center w-full">
                       <KundaliChart
                         chartType={selectedChartType}
                         lagnaSign={chartData.divisionalCharts?.[selectedChartType]?.lagnaSign || chartData.lagna?.signNumber || 1}
                         houses={chartData.divisionalCharts?.[selectedChartType]?.houses || {}}
-                        title={`${selectedChartType} Diamond Wheel`}
+                        title={
+                          selectedChartType === 'D1'
+                            ? t.kundali.d1Wheel
+                            : selectedChartType === 'D9'
+                            ? t.kundali.d9Wheel
+                            : t.kundali.d10Wheel
+                        }
                         size={540}
                       />
                     </div>
@@ -606,22 +652,19 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                     <div className="xl:col-span-5 p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-4 shadow-xl">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] text-amber-300 border border-white/10 text-xs font-medium">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Harmonic Insight</span>
+                        <span>कुंडली स्पष्टीकरण</span>
                       </div>
 
                       <h4 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                        {selectedChartType === 'D1' && 'Natal Matrix (D1 Wheel)'}
-                        {selectedChartType === 'D9' && 'Navamsha Soul Harmonic (D9)'}
-                        {selectedChartType === 'D10' && 'Dashamsha Vocation Harmonic (D10)'}
+                        {selectedChartType === 'D1' && t.kundali.d1Wheel}
+                        {selectedChartType === 'D9' && t.kundali.d9Wheel}
+                        {selectedChartType === 'D10' && t.kundali.d10Wheel}
                       </h4>
 
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
-                        {selectedChartType === 'D1' &&
-                          'The primary birth chart encapsulates your foundational physical constitution, temperament, and life baseline. The 1st house (Ascendant) sets the harmonic lens through which all transits and dashas manifest.'}
-                        {selectedChartType === 'D9' &&
-                          'The Navamsha is the 9-fold harmonic of the soul. In classical sidereal tradition, D9 reveals the character of the karmic partner, the quality of intimate union, and the spiritual trajectory of life past age 30.'}
-                        {selectedChartType === 'D10' &&
-                          'The Dashamsha is the 10-fold harmonic of vocation. It governs leadership authority, enterprise achievements, professional recognition, and public status.'}
+                        {selectedChartType === 'D1' && t.kundali.d1Desc}
+                        {selectedChartType === 'D9' && t.kundali.d9Desc}
+                        {selectedChartType === 'D10' && t.kundali.d10Desc}
                       </p>
 
                       <div className="pt-2">
@@ -630,7 +673,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                           className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-white text-slate-950 font-bold text-xs hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-lg"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Consult Oracle on this Wheel</span>
+                          <span>{t.kundali.consultOracle}</span>
                         </button>
                       </div>
                     </div>
@@ -638,7 +681,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                 </div>
               )}
 
-              {/* TAB 3: DAILY TRANSITS & GOCHAR */}
+              {/* TAB 3: DAILY TRANSITS & TODAY'S DAY */}
               {activeTab === 'daily' && (
                 <div className="space-y-6 animate-fadeIn">
                   {dailyData ? (
@@ -650,16 +693,16 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                             <div className="flex items-center gap-2">
                               <Orbit className="w-5 h-5 text-amber-300 animate-spin-slow" />
                               <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                                Real-Time Planetary Transits (प्रत्यक्ष ग्रह गोचर)
+                                {t.daily.title}
                               </h3>
                             </div>
                             <p className="text-xs text-slate-400 mt-1 font-light">
-                              Live astronomical positions computed dynamically via Python Ephemeris relative to your natal Lagna and Moon.
+                              {t.daily.subtitle}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 self-start md:self-auto">
                             <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
-                              Transit Force:
+                              {t.daily.transitForce}:
                             </span>
                             <span className="px-3.5 py-1.5 rounded-full bg-white/[0.08] text-amber-300 border border-white/15 text-sm font-bold font-mono">
                               {dailyData.overallScore || '7.5'} / 10
@@ -671,15 +714,15 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                         {dailyData.panchang && (
                           <div className="pt-2 flex flex-wrap gap-2 text-xs">
                             <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-slate-300">
-                              <span className="text-slate-400 font-medium">तिथी: </span>
+                              <span className="text-slate-400 font-medium">{t.daily.tithi}: </span>
                               <strong className="text-white">{dailyData.panchang.tithi}</strong>
                             </span>
                             <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-slate-300">
-                              <span className="text-slate-400 font-medium">वार: </span>
+                              <span className="text-slate-400 font-medium">{t.daily.vaar}: </span>
                               <strong className="text-white">{dailyData.panchang.vaar}</strong>
                             </span>
                             <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-slate-300">
-                              <span className="text-slate-400 font-medium">चंद्र नक्षत्र: </span>
+                              <span className="text-slate-400 font-medium">{t.daily.moonNak}: </span>
                               <strong className="text-white">{dailyData.panchang.nakshatra}</strong>
                             </span>
                             <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[11px] ml-auto">
@@ -691,12 +734,12 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
 
                       {/* 4 Key Planetary Influences Cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* 1. Shani Sade Sati & Dhayya */}
+                        {/* 1. Shani Sade Sati */}
                         <div className="p-5 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl flex flex-col justify-between">
                           <div>
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                                शनी गोचर / साडेसाती
+                                {t.daily.sadeSatiTitle}
                               </span>
                               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                                 dailyData.sadeSati?.hasSadeSati
@@ -720,14 +763,14 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                           <div>
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                                गुरू गोचर (Jupiter)
+                                {t.daily.guruTitle}
                               </span>
                               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                                 dailyData.guruGochar?.isFavorable
                                   ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                                   : 'bg-white/10 text-slate-300 border border-white/15'
                               }`}>
-                                {dailyData.guruGochar?.isFavorable ? 'शुभ गोचर' : 'मध्यम'}
+                                {dailyData.guruGochar?.isFavorable ? t.daily.favorable : t.daily.moderate}
                               </span>
                             </div>
                             <h4 className="text-sm sm:text-base font-bold text-white mt-2">
@@ -744,7 +787,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                           <div>
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                                चंद्रबल (Lunar Force)
+                                {t.daily.chandraTitle}
                               </span>
                               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
                                 {dailyData.chandraBala?.status}
@@ -764,14 +807,14 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                           <div>
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                                ताराबल (Stellar Alignment)
+                                {t.daily.taraTitle}
                               </span>
                               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                                 dailyData.taraBala?.auspicious
                                   ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
                                   : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                               }`}>
-                                {dailyData.taraBala?.auspicious ? 'शुभ तारा' : 'सावध तारा'}
+                                {dailyData.taraBala?.auspicious ? t.daily.favorable : t.daily.moderate}
                               </span>
                             </div>
                             <h4 className="text-sm sm:text-base font-bold text-white mt-2">
@@ -787,30 +830,28 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                       {/* Live 9-Graha Real-Time Planetary Transit Table */}
                       {dailyData.transitPlanets && (
                         <div className="p-5 sm:p-7 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-xl space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-amber-300" />
-                                आजचे प्रत्यक्ष नवग्रह गोचर कोष्टक (Live 9-Graha Transit)
-                              </h3>
-                              <p className="text-xs text-slate-400 font-light mt-0.5">
-                                प्रत्येक ग्रहाची आजची प्रत्यक्ष राशी, अंश, वक्री स्थिती आणि तुमच्या जन्मकुंडलीवरील परिणाम.
-                              </p>
-                            </div>
+                          <div>
+                            <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                              <Activity className="w-4 h-4 text-amber-300" />
+                              {t.daily.live9PlanetsTitle}
+                            </h3>
+                            <p className="text-xs text-slate-400 font-light mt-0.5">
+                              {t.daily.live9PlanetsSubtitle}
+                            </p>
                           </div>
 
                           <div className="overflow-x-auto no-scrollbar pt-2">
                             <table className="w-full text-left text-xs border-collapse">
                               <thead>
                                 <tr className="border-b border-white/10 text-slate-400 font-medium text-[11px] uppercase tracking-wider">
-                                  <th className="py-3 px-3">ग्रह (Planet)</th>
-                                  <th className="py-3 px-3">चालू राशी व अंश</th>
-                                  <th className="py-3 px-3">नक्षत्र व चरण</th>
-                                  <th className="py-3 px-3 text-center">गती</th>
-                                  <th className="py-3 px-3 text-center">लग्नापासून</th>
-                                  <th className="py-3 px-3 text-center">चंद्रापासून</th>
-                                  <th className="py-3 px-3 text-center">गोचर फळ</th>
-                                  <th className="py-3 px-3">शास्त्रीय प्रभाव</th>
+                                  <th className="py-3 px-3">{t.overview.colPlanet}</th>
+                                  <th className="py-3 px-3">{t.overview.colSign} &amp; {t.overview.colDeg}</th>
+                                  <th className="py-3 px-3">{t.overview.colNak}</th>
+                                  <th className="py-3 px-3 text-center">{t.daily.colMotion}</th>
+                                  <th className="py-3 px-3 text-center">{t.daily.colFromLagna}</th>
+                                  <th className="py-3 px-3 text-center">{t.daily.colFromMoon}</th>
+                                  <th className="py-3 px-3 text-center">{t.daily.colResult}</th>
+                                  <th className="py-3 px-3">{t.daily.colEffect}</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-white/5 font-light">
@@ -818,8 +859,8 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                                   <tr key={p.name} className="hover:bg-white/[0.02] transition-colors">
                                     <td className="py-3 px-3 whitespace-nowrap font-medium text-white flex items-center gap-2">
                                       <span className="w-2 h-2 rounded-full bg-amber-400/80" />
-                                      <span>{p.name}</span>
-                                      <span className="text-slate-400 font-normal">({p.nameMr})</span>
+                                      <span>{p.nameMr || p.name}</span>
+                                      <span className="text-slate-400 font-normal">({p.name})</span>
                                     </td>
                                     <td className="py-3 px-3 whitespace-nowrap">
                                       <span className="font-semibold text-slate-200">{p.sign}</span>
@@ -834,7 +875,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                                           ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                                           : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                                       }`}>
-                                        {p.isRetrograde ? 'वक्री (R)' : 'मार्गस्त'}
+                                        {p.isRetrograde ? t.overview.retro : t.overview.direct}
                                       </span>
                                     </td>
                                     <td className="py-3 px-3 text-center whitespace-nowrap font-mono text-slate-200">
@@ -849,7 +890,7 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                                           ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                                           : 'bg-white/10 text-slate-300 border border-white/15'
                                       }`}>
-                                        {p.isFavorable ? 'शुभ' : 'मध्यम'}
+                                        {p.isFavorable ? t.daily.favorable : t.daily.moderate}
                                       </span>
                                     </td>
                                     <td className="py-3 px-3 text-[11px] text-slate-300 max-w-xs leading-relaxed">
@@ -869,10 +910,10 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                           <div>
                             <h3 className="text-base font-bold text-white flex items-center gap-2">
                               <Sparkles className="w-4 h-4 text-amber-300" />
-                              Personalized Daily Transit Synthesis (दैनिक गोचर मार्गदर्शन)
+                              दैनिक गोचर मार्गदर्शन (Daily Synthesis)
                             </h3>
                             <p className="text-xs text-slate-400 font-light mt-0.5">
-                              आजच्या ग्रहमानानुसार विशेष मार्गदर्शन आणि दिवसभरातील कृती योजना.
+                              आजच्या ग्रहमानानुसार तुमच्या पत्रिकेसाठी विशेष सल्ला.
                             </p>
                           </div>
                           <button
@@ -880,69 +921,88 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                             disabled={aiLoading}
                             className="px-5 py-2.5 rounded-full bg-white text-slate-950 font-bold text-xs disabled:opacity-50 hover:bg-slate-100 transition-all shadow-md self-start sm:self-auto"
                           >
-                            {aiLoading ? 'Synthesizing...' : 'Request Oracle Synthesis'}
+                            {aiLoading ? t.daily.aiReportLoading : t.daily.aiReportBtn}
                           </button>
                         </div>
 
                         <div className="p-4 sm:p-6 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-light">
                           {aiReport?.daily ||
                             dailyData.summary ||
-                            'Click the button above to request a personalized daily synthesis grounded in today\'s planetary transit.'}
+                            'आजच्या दिवसाचे सविस्तर मार्गदर्शन मिळवण्यासाठी वरील बटण दाबा.'}
                         </div>
                       </div>
                     </>
                   ) : (
                     <div className="p-12 text-center text-slate-400 bg-white/[0.03] rounded-3xl border border-white/10 flex flex-col items-center justify-center">
                       <Compass className="w-8 h-8 text-white animate-spin-slow mb-3" />
-                      <p className="text-sm font-medium text-white">Aligning Real-Time Planetary Ephemeris...</p>
-                      <p className="text-xs text-slate-400 mt-1 font-light">Computing live 9-Graha transit coordinates and house alignments.</p>
+                      <p className="text-sm font-medium text-white">ग्रह गोचर तपासत आहोत...</p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* TAB 4: VOCATION */}
+              {/* TAB 4: PERSONAL NUMEROLOGY */}
+              {activeTab === 'numerology' && (
+                <PersonalNumerology birthData={birthData} lang={lang} t={t} />
+              )}
+
+              {/* TAB 5: COUPLE KUNDALI MATCH (36 GUNAS) */}
+              {activeTab === 'couple_kundali' && (
+                <CoupleKundaliMatch userProfile={birthData} lang={lang} t={t} />
+              )}
+
+              {/* TAB 6: COUPLE NUMEROLOGY */}
+              {activeTab === 'couple_numerology' && (
+                <CoupleNumerology userProfile={birthData} lang={lang} t={t} />
+              )}
+
+              {/* TAB 7: CAREER & JOB */}
               {activeTab === 'career' && (
-                <div className="space-y-6">
-                  <div className="p-5 sm:p-9 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-5 shadow-xl">
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="p-5 sm:p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-5 shadow-xl">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <Briefcase className="w-5 h-5 text-white" />
-                        <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                          Vocation &amp; Public Standing (10th Harmonic)
-                        </h3>
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                            {t.career.title}
+                          </h3>
+                          <p className="text-xs text-slate-400 font-light mt-0.5">
+                            {t.career.subtitle}
+                          </p>
+                        </div>
                       </div>
                       <button
                         onClick={() => fetchAiReport('career')}
                         disabled={aiLoading}
-                        className="px-5 py-2 rounded-full bg-white text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 disabled:opacity-50 transition-all self-start sm:self-auto"
+                        className="px-5 py-2.5 rounded-full bg-white text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 disabled:opacity-50 transition-all self-start sm:self-auto"
                       >
-                        {aiLoading ? 'Synthesizing...' : 'Generate Career Synthesis'}
+                        {aiLoading ? t.career.generating : t.career.generateBtn}
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-2">
                       <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400">10th House Lord</span>
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400">{t.career.tenthLord}</span>
                         <div className="font-bold text-white text-base mt-1">
-                          {chartData.careerAnalysis?.tenthLord || 'Evaluated'}
+                          {chartData.careerAnalysis?.tenthLord || 'शुभ ग्रह'}
                         </div>
                         <span className="text-[11px] text-slate-300 font-mono">
-                          In {chartData.careerAnalysis?.tenthLordSign || chartData.careerAnalysis?.tenthHouseSign || 'Harmonic Sign'}
+                          {chartData.careerAnalysis?.tenthHouseSign || 'दशम भाव'}
                         </span>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400">Natural Domains</span>
-                        <div className="font-bold text-white text-base mt-1">
-                          {chartData.careerAnalysis?.favorableDomains || 'Calculated from 10th Lord'}
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400">{t.career.domains}</span>
+                        <div className="font-bold text-white text-sm sm:text-base mt-1">
+                          {chartData.careerAnalysis?.favorableDomains || 'Technology, Leadership & Consulting'}
                         </div>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400">Orientation</span>
-                        <div className="font-bold text-emerald-300 text-base mt-1">
-                          {chartData.careerAnalysis?.inclination || 'Independent Advisory'}
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400">{t.career.inclination}</span>
+                        <div className="font-bold text-emerald-300 text-sm sm:text-base mt-1">
+                          {chartData.careerAnalysis?.inclination || 'प्रगती व अधिकार पद'}
                         </div>
                       </div>
                     </div>
@@ -950,29 +1010,34 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                     <div className="p-4 sm:p-5 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-light mt-4">
                       {aiReport?.career ||
                         chartData.careerAnalysis?.summary ||
-                        'Generate your comprehensive career synthesis to examine optimal promotion windows, leadership transitions, and strategic ventures.'}
+                        'करिअरमधील प्रगती, नोकरीचे योग आणि व्यवसाय संधी जाणून घेण्यासाठी वरील बटण दाबा.'}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 5: UNION & SYNASTRY */}
+              {/* TAB 8: MARRIAGE & LOVE */}
               {activeTab === 'marriage' && (
-                <div className="space-y-6">
-                  <div className="p-5 sm:p-9 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-5 shadow-xl">
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="p-5 sm:p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 space-y-5 shadow-xl">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <Heart className="w-5 h-5 text-white" />
-                        <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                          Union, Partnership &amp; Mars Harmonic (7th House)
-                        </h3>
+                        <Heart className="w-5 h-5 text-rose-400" />
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                            {t.marriage.title}
+                          </h3>
+                          <p className="text-xs text-slate-400 font-light mt-0.5">
+                            {t.marriage.subtitle}
+                          </p>
+                        </div>
                       </div>
                       <button
                         onClick={() => fetchAiReport('marriage')}
                         disabled={aiLoading}
-                        className="px-5 py-2 rounded-full bg-white text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 disabled:opacity-50 transition-all self-start sm:self-auto"
+                        className="px-5 py-2.5 rounded-full bg-white text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 disabled:opacity-50 transition-all self-start sm:self-auto"
                       >
-                        {aiLoading ? 'Synthesizing...' : 'Generate Union Synthesis'}
+                        {aiLoading ? t.marriage.generating : t.marriage.generateBtn}
                       </button>
                     </div>
 
@@ -992,12 +1057,11 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                         <div>
                           <div className="font-bold text-sm">
                             {chartData.marriageAnalysis?.hasMangalDosha
-                              ? 'Mars Alignment Identified (Active Kuja Energy)'
-                              : 'Balanced Mars Harmonic (No Affliction)'}
+                              ? 'मंगळ प्रभाव (Kuja Energy Active)'
+                              : 'मंगळ दोष नाही (No Mangal Dosha)'}
                           </div>
                           <div className="text-xs text-slate-300 mt-1 font-light">
-                            {chartData.marriageAnalysis?.doshaDetails ||
-                              `Mars is situating in House ${chartData.planets?.Mars?.house || 'neutral'}.`}
+                            {chartData.marriageAnalysis?.doshaDetails}
                           </div>
                         </div>
                       </div>
@@ -1006,27 +1070,35 @@ export default function Dashboard({ user, initialBirthData, onLogout, onReturnHo
                     <div className="p-4 sm:p-5 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line font-light mt-4">
                       {aiReport?.marriage ||
                         chartData.marriageAnalysis?.summary ||
-                        'Generate your union synthesis to evaluate spouse characteristics, partnership timing, and energetic harmony.'}
+                        'विवाह योग, जोडीदाराचे गुणधर्म आणि वैवाहिक सौख्याबद्दल सविस्तर माहिती मिळवण्यासाठी वरील बटण दाबा.'}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 6: VIMSHOTTARI DASHA */}
+              {/* TAB 9: VIMSHOTTARI DASHA */}
               {activeTab === 'dasha' && (
-                <div className="space-y-6">
-                  <div className="p-5 sm:p-9 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl">
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-6 tracking-tight">
-                      Planetary Progression (120-Year Vimshottari Cycle)
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="p-5 sm:p-8 rounded-3xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-2xl">
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2 tracking-tight">
+                      {t.dasha.title}
                     </h3>
+                    <p className="text-xs text-slate-400 font-light mb-6">
+                      {t.dasha.subtitle}
+                    </p>
                     <DashaTimeline dashaData={chartData.dashaTimeline || []} />
                   </div>
                 </div>
               )}
 
-              {/* TAB 7: AI ASTROLOGER ORACLE */}
+              {/* TAB 10: AI ASTROLOGER CHAT */}
               {activeTab === 'chat' && (
-                <AIChatbot chartData={chartData} nativeName={birthData.name} />
+                <AIChatbot
+                  chartData={chartData}
+                  nativeName={birthData.name}
+                  lang={lang}
+                  t={t}
+                />
               )}
             </>
           )}

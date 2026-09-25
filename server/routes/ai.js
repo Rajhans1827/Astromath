@@ -6,13 +6,13 @@ const router = express.Router();
 // Generate domain interpretation (Career, Marriage, Daily Horoscope)
 router.post('/interpret', async (req, res) => {
   try {
-    const { domain, chartData, dailyData } = req.body;
+    const { domain, chartData, dailyData, lang } = req.body;
 
     if (!domain || !chartData) {
       return res.status(400).json({ message: 'Domain and chartData are required' });
     }
 
-    const analysis = await generateDomainAnalysis({ domain, chartData, dailyData });
+    const analysis = await generateDomainAnalysis({ domain, chartData, dailyData, lang: lang || 'mr' });
     return res.status(200).json({ analysis });
   } catch (err) {
     console.error('AI Interpret Error:', err);
@@ -23,13 +23,13 @@ router.post('/interpret', async (req, res) => {
 // Conversational Chat with AI Astrologer
 router.post('/chat', async (req, res) => {
   try {
-    const { question, chartData, history } = req.body;
+    const { question, chartData, history, lang } = req.body;
 
     if (!question) {
       return res.status(400).json({ message: 'Question is required' });
     }
 
-    const reply = await chatWithAIAstrologer({ question, chartData, history });
+    const reply = await chatWithAIAstrologer({ question, chartData, history, lang: lang || 'mr' });
     return res.status(200).json({ reply });
   } catch (err) {
     console.error('AI Chat Error:', err);

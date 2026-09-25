@@ -226,4 +226,75 @@ router.post('/daily', async (req, res) => {
   }
 });
 
+// 5. Personal Numerology (मूलांक, भाग्यांक, नामांक)
+router.post('/numerology', async (req, res) => {
+  try {
+    const { name, dob } = req.body;
+    if (!dob) {
+      return res.status(400).json({ message: 'Date of birth is required for numerology' });
+    }
+    const result = await ephemerisService.calculateNumerology({ name: name || '', dob });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Numerology Error:', err);
+    return res.status(500).json({ message: 'Failed to calculate numerology', error: err.message });
+  }
+});
+
+// 6. Couple Numerology (अंकशास्त्र जुळवणी)
+router.post('/couple-numerology', async (req, res) => {
+  try {
+    const { partner1, partner2 } = req.body;
+    if (!partner1?.dob || !partner2?.dob) {
+      return res.status(400).json({ message: 'Birth dates for both partners are required' });
+    }
+    const result = await ephemerisService.calculateCoupleNumerology({ partner1, partner2 });
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Couple Numerology Error:', err);
+    return res.status(500).json({ message: 'Failed to calculate couple numerology', error: err.message });
+  }
+});
+
+// 7. Couple Kundali Match (36 Guna Milan & Ashta Koota)
+router.post('/kundali-match', async (req, res) => {
+  try {
+    const { boy, girl } = req.body;
+    if (!boy?.dob || !boy?.tob || !girl?.dob || !girl?.tob) {
+      return res.status(400).json({ message: 'DOB and TOB for both partners are required for Kundali matching' });
+    }
+
+    const boyCoords = resolveCoordinates(boy.city, boy.lat, boy.lon, boy.tz);
+    const girlCoords = resolveCoordinates(girl.city, girl.lat, girl.lon, girl.tz);
+
+    const boyPayload = {
+      name: boy.name || 'वर (Groom)',
+      dob: boy.dob.trim(),
+      tob: boy.tob.trim(),
+      lat: boyCoords.lat,
+      lon: boyCoords.lon,
+      tz: boyCoords.tz,
+    };
+
+    const girlPayload = {
+      name: girl.name || 'वधू (Bride)',
+      dob: girl.dob.trim(),
+      tob: girl.tob.trim(),
+      lat: girlCoords.lat,
+      lon: girlCoords.lon,
+      tz: girlCoords.tz,
+    };
+
+    const result = await ephemerisService.calculateKundaliMatch({
+      boy: boyPayload,
+      girl: girlPayload,
+    });
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Kundali Match Error:', err);
+    return res.status(500).json({ message: 'Failed to calculate Kundali matching', error: err.message });
+  }
+});
+
 export default router;
